@@ -10,9 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    modo: search["modo"] === "registo" ? ("registo" as const) : ("entrar" as const),
-  }),
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { modo?: "registo" | "entrar" } =>
+    search["modo"] === "registo" ? { modo: "registo" } : {},
   head: () => ({
     meta: [
       { title: "Entrar — Documentos de Segurança Privada" },
