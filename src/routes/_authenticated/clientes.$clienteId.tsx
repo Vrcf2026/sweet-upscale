@@ -85,7 +85,17 @@ function ClienteDetalhe() {
 
   const guardar = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("clientes").update(form).eq("id", clienteId);
+      const payload = {
+        nome: form["nome"] ?? "",
+        nif: form["nif"] ?? null,
+        morada: form["morada"] ?? null,
+        localidade: form["localidade"] ?? null,
+        cp: form["cp"] ?? null,
+        tlm: form["tlm"] ?? null,
+        tel: form["tel"] ?? null,
+        email: form["email"] ?? null,
+      };
+      const { error } = await supabase.from("clientes").update(payload).eq("id", clienteId);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
