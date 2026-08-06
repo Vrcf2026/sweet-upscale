@@ -17,6 +17,7 @@ import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedClientesClienteIdRouteImport } from './routes/_authenticated/clientes.$clienteId'
 import { Route as AuthenticatedDocumentosIndexRouteImport } from './routes/_authenticated/documentos.index'
+import { Route as AuthenticatedDocumentosDocumentoIdRouteImport } from './routes/_authenticated/documentos.$documentoId'
 import { Route as AuthenticatedInstalacoesInstalacaoIdRouteImport } from './routes/_authenticated/instalacoes.$instalacaoId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -61,6 +62,12 @@ const AuthenticatedDocumentosIndexRoute =
     path: '/documentos/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDocumentosDocumentoIdRoute =
+  AuthenticatedDocumentosDocumentoIdRouteImport.update({
+    id: '/documentos/$documentoId',
+    path: '/documentos/$documentoId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInstalacoesInstalacaoIdRoute =
   AuthenticatedInstalacoesInstalacaoIdRouteImport.update({
     id: '/instalacoes/$instalacaoId',
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/empresa': typeof AuthenticatedEmpresaRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/documentos/': typeof AuthenticatedDocumentosIndexRoute
@@ -84,6 +92,7 @@ export interface FileRoutesByTo {
   '/empresa': typeof AuthenticatedEmpresaRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
   '/documentos': typeof AuthenticatedDocumentosIndexRoute
@@ -96,6 +105,7 @@ export interface FileRoutesById {
   '/_authenticated/empresa': typeof AuthenticatedEmpresaRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/_authenticated/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/_authenticated/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/documentos/': typeof AuthenticatedDocumentosIndexRoute
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/empresa'
     | '/painel'
     | '/clientes/$clienteId'
+    | '/documentos/$documentoId'
     | '/instalacoes/$instalacaoId'
     | '/clientes/'
     | '/documentos/'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/empresa'
     | '/painel'
     | '/clientes/$clienteId'
+    | '/documentos/$documentoId'
     | '/instalacoes/$instalacaoId'
     | '/clientes'
     | '/documentos'
@@ -129,6 +141,7 @@ export interface FileRouteTypes {
     | '/_authenticated/empresa'
     | '/_authenticated/painel'
     | '/_authenticated/clientes/$clienteId'
+    | '/_authenticated/documentos/$documentoId'
     | '/_authenticated/instalacoes/$instalacaoId'
     | '/_authenticated/clientes/'
     | '/_authenticated/documentos/'
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocumentosIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/documentos/$documentoId': {
+      id: '/_authenticated/documentos/$documentoId'
+      path: '/documentos/$documentoId'
+      fullPath: '/documentos/$documentoId'
+      preLoaderRoute: typeof AuthenticatedDocumentosDocumentoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/instalacoes/$instalacaoId': {
       id: '/_authenticated/instalacoes/$instalacaoId'
       path: '/instalacoes/$instalacaoId'
@@ -212,6 +232,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEmpresaRoute: typeof AuthenticatedEmpresaRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedClientesClienteIdRoute: typeof AuthenticatedClientesClienteIdRoute
+  AuthenticatedDocumentosDocumentoIdRoute: typeof AuthenticatedDocumentosDocumentoIdRoute
   AuthenticatedInstalacoesInstalacaoIdRoute: typeof AuthenticatedInstalacoesInstalacaoIdRoute
   AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
   AuthenticatedDocumentosIndexRoute: typeof AuthenticatedDocumentosIndexRoute
@@ -221,6 +242,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEmpresaRoute: AuthenticatedEmpresaRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedClientesClienteIdRoute: AuthenticatedClientesClienteIdRoute,
+  AuthenticatedDocumentosDocumentoIdRoute:
+    AuthenticatedDocumentosDocumentoIdRoute,
   AuthenticatedInstalacoesInstalacaoIdRoute:
     AuthenticatedInstalacoesInstalacaoIdRoute,
   AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
