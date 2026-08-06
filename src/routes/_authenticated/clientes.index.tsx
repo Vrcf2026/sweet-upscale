@@ -53,7 +53,9 @@ function ClientesPage() {
     mutationFn: async () => {
       if (!form["nome"]?.trim()) throw new Error("O nome é obrigatório");
       const user_id = await getUserId();
-      const { error } = await supabase.from("clientes").insert({ ...form, user_id });
+      const { error } = await supabase
+        .from("clientes")
+        .insert({ ...form, nome: form["nome"].trim(), user_id });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
