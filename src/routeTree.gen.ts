@@ -16,6 +16,7 @@ import { Route as AuthenticatedEmpresaRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
 import { Route as AuthenticatedClientesClienteIdRouteImport } from './routes/_authenticated/clientes.$clienteId'
+import { Route as AuthenticatedInstalacoesInstalacaoIdRouteImport } from './routes/_authenticated/instalacoes.$instalacaoId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +54,12 @@ const AuthenticatedClientesClienteIdRoute =
     path: '/clientes/$clienteId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInstalacoesInstalacaoIdRoute =
+  AuthenticatedInstalacoesInstalacaoIdRouteImport.update({
+    id: '/instalacoes/$instalacaoId',
+    path: '/instalacoes/$instalacaoId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/empresa': typeof AuthenticatedEmpresaRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +76,7 @@ export interface FileRoutesByTo {
   '/empresa': typeof AuthenticatedEmpresaRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +87,7 @@ export interface FileRoutesById {
   '/_authenticated/empresa': typeof AuthenticatedEmpresaRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/_authenticated/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
 }
 export interface FileRouteTypes {
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/empresa'
     | '/painel'
     | '/clientes/$clienteId'
+    | '/instalacoes/$instalacaoId'
     | '/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/empresa'
     | '/painel'
     | '/clientes/$clienteId'
+    | '/instalacoes/$instalacaoId'
     | '/clientes'
   id:
     | '__root__'
@@ -105,6 +117,7 @@ export interface FileRouteTypes {
     | '/_authenticated/empresa'
     | '/_authenticated/painel'
     | '/_authenticated/clientes/$clienteId'
+    | '/_authenticated/instalacoes/$instalacaoId'
     | '/_authenticated/clientes/'
   fileRoutesById: FileRoutesById
 }
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesClienteIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/instalacoes/$instalacaoId': {
+      id: '/_authenticated/instalacoes/$instalacaoId'
+      path: '/instalacoes/$instalacaoId'
+      fullPath: '/instalacoes/$instalacaoId'
+      preLoaderRoute: typeof AuthenticatedInstalacoesInstalacaoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -172,6 +192,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEmpresaRoute: typeof AuthenticatedEmpresaRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedClientesClienteIdRoute: typeof AuthenticatedClientesClienteIdRoute
+  AuthenticatedInstalacoesInstalacaoIdRoute: typeof AuthenticatedInstalacoesInstalacaoIdRoute
   AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
 }
 
@@ -179,6 +200,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEmpresaRoute: AuthenticatedEmpresaRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedClientesClienteIdRoute: AuthenticatedClientesClienteIdRoute,
+  AuthenticatedInstalacoesInstalacaoIdRoute:
+    AuthenticatedInstalacoesInstalacaoIdRoute,
   AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
 }
 

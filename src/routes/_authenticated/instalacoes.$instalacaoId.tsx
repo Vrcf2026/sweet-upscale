@@ -15,6 +15,7 @@ import {
   fetchEquipamentos,
   fetchInstalacao,
   fetchIntervencoes,
+  getUserId,
 } from "@/lib/data";
 import { DOC_LABEL, type DocTipo } from "@/lib/model";
 import { dataPT } from "@/lib/docs";
@@ -192,9 +193,10 @@ function Equipamentos({ instalacaoId, lista }: { instalacaoId: string; lista: Eq
 
   const adicionar = useMutation({
     mutationFn: async (linhas: typeof novo[]) => {
+      const user_id = await getUserId();
       const rows = linhas
         .filter((l) => l.equip.trim())
-        .map((l, n) => ({ ...l, instalacao_id: instalacaoId, ordem: lista.length + n }));
+        .map((l, n) => ({ ...l, instalacao_id: instalacaoId, user_id, ordem: lista.length + n }));
       if (!rows.length) throw new Error("Nada para adicionar");
       const { error } = await supabase.from("equipamentos").insert(rows);
       if (error) throw new Error(error.message);
@@ -230,9 +232,10 @@ function Equipamentos({ instalacaoId, lista }: { instalacaoId: string; lista: Eq
 
   async function aoCarregarFicheiro(file: File) {
     try {
-      const conteudo = file.name.toLowerCase().endsWith(".pdf")
+      const lido = file.name.toLowerCase().endsWith(".pdf")
         ? await extrairTextoPdf(file)
         : await lerExcel(file);
+      const conteudo = typeof lido === "string" ? lido : JSON.stringify(lido);
       if (!conteudo.trim()) throw new Error("Não foi possível ler o ficheiro");
       setTexto(conteudo.slice(0, 12000));
       toast.success("Ficheiro lido — confirma e importa com IA");
@@ -372,9 +375,10 @@ function Intervencoes({ instalacaoId, lista }: { instalacaoId: string; lista: In
 
   const criar = useMutation({
     mutationFn: async () => {
+      const user_id = await getUserId();
       const { error } = await supabase
         .from("intervencoes")
-        .insert({ ...nova, instalacao_id: instalacaoId });
+        .insert({ ...nova, instalacao_id: instalacaoId, user_id });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
