@@ -10,33 +10,160 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedEmpresaRouteImport } from './routes/_authenticated/empresa'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authenticated/clientes.index'
+import { Route as AuthenticatedClientesClienteIdRouteImport } from './routes/_authenticated/clientes.$clienteId'
+import { Route as AuthenticatedDocumentosIndexRouteImport } from './routes/_authenticated/documentos.index'
+import { Route as AuthenticatedDocumentosDocumentoIdRouteImport } from './routes/_authenticated/documentos.$documentoId'
+import { Route as AuthenticatedInstalacoesInstalacaoIdRouteImport } from './routes/_authenticated/instalacoes.$instalacaoId'
+import { Route as AuthenticatedGerarInstalacaoIdTipoRouteImport } from './routes/_authenticated/gerar.$instalacaoId.$tipo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEmpresaRoute = AuthenticatedEmpresaRouteImport.update({
+  id: '/empresa',
+  path: '/empresa',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClientesIndexRoute =
+  AuthenticatedClientesIndexRouteImport.update({
+    id: '/clientes/',
+    path: '/clientes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedClientesClienteIdRoute =
+  AuthenticatedClientesClienteIdRouteImport.update({
+    id: '/clientes/$clienteId',
+    path: '/clientes/$clienteId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDocumentosIndexRoute =
+  AuthenticatedDocumentosIndexRouteImport.update({
+    id: '/documentos/',
+    path: '/documentos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDocumentosDocumentoIdRoute =
+  AuthenticatedDocumentosDocumentoIdRouteImport.update({
+    id: '/documentos/$documentoId',
+    path: '/documentos/$documentoId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInstalacoesInstalacaoIdRoute =
+  AuthenticatedInstalacoesInstalacaoIdRouteImport.update({
+    id: '/instalacoes/$instalacaoId',
+    path: '/instalacoes/$instalacaoId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedGerarInstalacaoIdTipoRoute =
+  AuthenticatedGerarInstalacaoIdTipoRouteImport.update({
+    id: '/gerar/$instalacaoId/$tipo',
+    path: '/gerar/$instalacaoId/$tipo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/empresa': typeof AuthenticatedEmpresaRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
+  '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
+  '/clientes/': typeof AuthenticatedClientesIndexRoute
+  '/documentos/': typeof AuthenticatedDocumentosIndexRoute
+  '/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/empresa': typeof AuthenticatedEmpresaRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
+  '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
+  '/clientes': typeof AuthenticatedClientesIndexRoute
+  '/documentos': typeof AuthenticatedDocumentosIndexRoute
+  '/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/empresa': typeof AuthenticatedEmpresaRoute
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/clientes/$clienteId': typeof AuthenticatedClientesClienteIdRoute
+  '/_authenticated/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
+  '/_authenticated/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
+  '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
+  '/_authenticated/documentos/': typeof AuthenticatedDocumentosIndexRoute
+  '/_authenticated/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/empresa'
+    | '/painel'
+    | '/clientes/$clienteId'
+    | '/documentos/$documentoId'
+    | '/instalacoes/$instalacaoId'
+    | '/clientes/'
+    | '/documentos/'
+    | '/gerar/$instalacaoId/$tipo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/empresa'
+    | '/painel'
+    | '/clientes/$clienteId'
+    | '/documentos/$documentoId'
+    | '/instalacoes/$instalacaoId'
+    | '/clientes'
+    | '/documentos'
+    | '/gerar/$instalacaoId/$tipo'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/empresa'
+    | '/_authenticated/painel'
+    | '/_authenticated/clientes/$clienteId'
+    | '/_authenticated/documentos/$documentoId'
+    | '/_authenticated/instalacoes/$instalacaoId'
+    | '/_authenticated/clientes/'
+    | '/_authenticated/documentos/'
+    | '/_authenticated/gerar/$instalacaoId/$tipo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +175,111 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/empresa': {
+      id: '/_authenticated/empresa'
+      path: '/empresa'
+      fullPath: '/empresa'
+      preLoaderRoute: typeof AuthenticatedEmpresaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clientes/': {
+      id: '/_authenticated/clientes/'
+      path: '/clientes'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof AuthenticatedClientesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clientes/$clienteId': {
+      id: '/_authenticated/clientes/$clienteId'
+      path: '/clientes/$clienteId'
+      fullPath: '/clientes/$clienteId'
+      preLoaderRoute: typeof AuthenticatedClientesClienteIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/documentos/': {
+      id: '/_authenticated/documentos/'
+      path: '/documentos'
+      fullPath: '/documentos/'
+      preLoaderRoute: typeof AuthenticatedDocumentosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/documentos/$documentoId': {
+      id: '/_authenticated/documentos/$documentoId'
+      path: '/documentos/$documentoId'
+      fullPath: '/documentos/$documentoId'
+      preLoaderRoute: typeof AuthenticatedDocumentosDocumentoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/instalacoes/$instalacaoId': {
+      id: '/_authenticated/instalacoes/$instalacaoId'
+      path: '/instalacoes/$instalacaoId'
+      fullPath: '/instalacoes/$instalacaoId'
+      preLoaderRoute: typeof AuthenticatedInstalacoesInstalacaoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gerar/$instalacaoId/$tipo': {
+      id: '/_authenticated/gerar/$instalacaoId/$tipo'
+      path: '/gerar/$instalacaoId/$tipo'
+      fullPath: '/gerar/$instalacaoId/$tipo'
+      preLoaderRoute: typeof AuthenticatedGerarInstalacaoIdTipoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEmpresaRoute: typeof AuthenticatedEmpresaRoute
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedClientesClienteIdRoute: typeof AuthenticatedClientesClienteIdRoute
+  AuthenticatedDocumentosDocumentoIdRoute: typeof AuthenticatedDocumentosDocumentoIdRoute
+  AuthenticatedInstalacoesInstalacaoIdRoute: typeof AuthenticatedInstalacoesInstalacaoIdRoute
+  AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
+  AuthenticatedDocumentosIndexRoute: typeof AuthenticatedDocumentosIndexRoute
+  AuthenticatedGerarInstalacaoIdTipoRoute: typeof AuthenticatedGerarInstalacaoIdTipoRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEmpresaRoute: AuthenticatedEmpresaRoute,
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedClientesClienteIdRoute: AuthenticatedClientesClienteIdRoute,
+  AuthenticatedDocumentosDocumentoIdRoute:
+    AuthenticatedDocumentosDocumentoIdRoute,
+  AuthenticatedInstalacoesInstalacaoIdRoute:
+    AuthenticatedInstalacoesInstalacaoIdRoute,
+  AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
+  AuthenticatedDocumentosIndexRoute: AuthenticatedDocumentosIndexRoute,
+  AuthenticatedGerarInstalacaoIdTipoRoute:
+    AuthenticatedGerarInstalacaoIdTipoRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
