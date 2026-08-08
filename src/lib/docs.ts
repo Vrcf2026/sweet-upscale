@@ -55,6 +55,7 @@ const CSS = `
   .doc img.foto { max-width:100%; max-height:70mm; border:1px solid #999; margin-top:2mm; }
   .doc ul.chk { list-style:none; padding:0; margin:2mm 0; columns:2; }
   .doc ul.chk li { padding:.5mm 0; font-size:10px; }
+  .doc .legal { margin-top:8mm; border-top:1px solid #999; padding-top:2mm; font-size:8.5px; color:#444; line-height:1.4; }
 `;
 
 function header(ctx: DocContext, titulo: string) {
@@ -108,9 +109,24 @@ function assinaturas(ctx: DocContext, esquerda: string, direita: string) {
   const a = ctx.assinatura
     ? `<img class="assin" src="${ctx.assinatura}" alt="Assinatura do cliente" />`
     : "";
+  const nome = ctx.form["nomeAssinante"] ?? ctx.cliente?.nome ?? "";
+  const qualidade = ctx.form["qualidadeAssinante"] ?? "";
+  const idDoc = ctx.form["docAssinante"] ?? "";
+  const detalhes = [qualidade, idDoc].filter(Boolean).join(" &middot; ");
   return `<div class="sign">
     <div>${esc(ctx.empresa?.tecnico ?? "")}<br/><span class="muted">${esc(esquerda)}</span></div>
-    <div>${a}${esc(ctx.form["nomeAssinante"] ?? ctx.cliente?.nome ?? "")}<br/><span class="muted">${esc(direita)}</span></div>
+    <div>${a}${esc(nome)}<br/>${detalhes ? `<span class="muted">${detalhes}</span><br/>` : ""}<span class="muted">${esc(direita)}</span></div>
+  </div>`;
+}
+
+function rodape(ctx: DocContext) {
+  const e = ctx.empresa;
+  const emissao = e?.data_emissao ? ` emitido em ${dataPT(e.data_emissao)}` : "";
+  return `<div class="legal">
+    ${esc(e?.nome ?? "")} — entidade titular do Registo Prévio n.º ${esc(e?.registo ?? "—")}${emissao},
+    emitido pela Polícia de Segurança Pública nos termos da Lei n.º 34/2013, de 16 de maio, e da
+    Portaria n.º 273/2013, de 20 de agosto. NIPC ${esc(e?.nipc ?? "—")}.
+    Documento conservado pela entidade titular pelo prazo mínimo de 5 anos.
   </div>`;
 }
 
@@ -178,6 +194,11 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${tabelaEquipamento(ctx.equipamentos)}
       <h2>Checklist de configuração e privacidade</h2>
       <ul class="chk">${chk}</ul>
+      <h2>Videovigilância — proteção de dados</h2>
+      <div>Prazo de retenção das imagens: ${esc(ctx.form["retencao"] || "30")} dias, findo o qual são
+      automaticamente destruídas, nos termos do artigo 31.º da Lei n.º 34/2013, de 16 de maio.
+      O sistema não capta a via pública e encontra-se afixado, em local visível, o aviso de
+      videovigilância exigido pelo RGPD.</div>
       <h2>Testes efetuados</h2>
       <div>${esc(ctx.form["testes"] ?? "")}</div>
       <h2>Observações</h2>
@@ -186,7 +207,7 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
-  return `<style>${CSS}</style><div class="doc">${body}</div>`;
+  return `<style>${CSS}</style><div class="doc">${body}${rodape(ctx)}</div>`;
 }
 
 export const CHECKLIST_AUTO = [

@@ -41,6 +41,8 @@ export type Instalacao = {
   data_instalacao: string | null;
   num_registo: string | null;
   monitorizado_por: string | null;
+  periodicidade_meses: number | null;
+  proxima_manutencao: string | null;
   created_at: string;
 };
 

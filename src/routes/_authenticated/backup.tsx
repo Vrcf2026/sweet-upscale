@@ -1,0 +1,140 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchClientes,
+  fetchDocumentos,
+  fetchEmpresa,
+  fetchInstalacoes,
+} from "@/lib/data";
+
+export const Route = createFileRoute("/_authenticated/backup")({
+  head: () => ({
+    meta: [
+      { title: "Backup — Documentos de Segurança Privada" },
+      {
+        name: "description",
+        content: "Exporta todos os teus clientes, instalações e documentos num único ficheiro.",
+      },
+      { property: "og:title", content: "Backup e exportação" },
+      { property: "og:description", content: "Cópia integral dos dados e documentos gerados." },
+    ],
+  }),
+  component: BackupPage,
+});
+
+function descarregar(nome: string, conteudo: string, tipo: string) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csv(linhas: Record<string, unknown>[]) {
+  if (!linhas.length) return "";
+  const cols = Object.keys(linhas[0]!);
+  const cel = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  return [cols.join(","), ...linhas.map((l) => cols.map((c) => cel(l[c])).join(","))].join("\n");
+}
+
+function BackupPage() {
+  const [aExportar, setAExportar] = useState(false);
+
+  async function recolher() {
+    const [empresa, clientes, instalacoes, documentos] = await Promise.all([
+      fetchEmpresa(),
+      fetchClientes(),
+      fetchInstalacoes(),
+      fetchDocumentos(),
+    ]);
+    const [equipamentos, intervencoes] = await Promise.all([
+      supabase.from("equipamentos").select("*"),
+      supabase.from("intervencoes").select("*"),
+    ]);
+    return {
+      exportado_em: new Date().toISOString(),
+      empresa,
+      clientes,
+      instalacoes,
+      equipamentos: equipamentos.data ?? [],
+      intervencoes: intervencoes.data ?? [],
+      documentos,
+    };
+  }
+
+  async function exportar(formato: "json" | "csv") {
+    try {
+      setAExportar(true);
+      const dados = await recolher();
+      const hoje = new Date().toISOString().slice(0, 10);
+      if (formato === "json") {
+        descarregar(`backup-${hoje}.json`, JSON.stringify(dados, null, 2), "application/json");
+      } else {
+        const partes = [
+          "# CLIENTES",
+          csv(dados.clientes as unknown as Record<string, unknown>[]),
+          "",
+          "# INSTALACOES",
+          csv(dados.instalacoes as unknown as Record<string, unknown>[]),
+          "",
+          "# EQUIPAMENTOS",
+          csv(dados.equipamentos as unknown as Record<string, unknown>[]),
+          "",
+          "# INTERVENCOES",
+          csv(dados.intervencoes as unknown as Record<string, unknown>[]),
+          "",
+          "# DOCUMENTOS",
+          csv(
+            dados.documentos.map((d) => ({
+              numero: d.numero,
+              tipo: d.tipo,
+              estado: d.estado,
+              resumo: d.resumo,
+              created_at: d.created_at,
+            })),
+          ),
+        ];
+        descarregar(`backup-${hoje}.csv`, partes.join("\n"), "text/csv;charset=utf-8");
+      }
+      toast.success("Backup descarregado");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAExportar(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Backup e exportação</h1>
+        <p className="text-muted-foreground">
+          Cópia integral dos teus dados — útil para o dever de conservação de 5 anos.
+        </p>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Exportar tudo</CardTitle>
+          <CardDescription>
+            Inclui empresa, clientes, instalações, equipamento, intervenções e documentos gerados
+            (o JSON contém o HTML completo de cada documento).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          <Button onClick={() => exportar("json")} disabled={aExportar}>
+            <Download className="h-4 w-4" /> Backup completo (JSON)
+          </Button>
+          <Button variant="secondary" onClick={() => exportar("csv")} disabled={aExportar}>
+            <Download className="h-4 w-4" /> Tabelas (CSV)
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

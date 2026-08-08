@@ -46,6 +46,8 @@ const CAMPOS = [
   ["monitorizado_por", "Monitorizado por"],
   ["instalado_por", "Instalado por"],
   ["data_instalacao", "Data de instalação"],
+  ["periodicidade_meses", "Periodicidade de manutenção (meses)"],
+  ["proxima_manutencao", "Próxima manutenção"],
 ] as const;
 
 const TIPOS: DocTipo[] = ["relatorio", "livro", "declaracao", "auto"];
@@ -101,6 +103,8 @@ function InstalacaoDetalhe() {
           monitorizado_por: form["monitorizado_por"] ?? null,
           instalado_por: form["instalado_por"] ?? null,
           data_instalacao: form["data_instalacao"] || null,
+          periodicidade_meses: Number(form["periodicidade_meses"]) || 12,
+          proxima_manutencao: form["proxima_manutencao"] || null,
         })
         .eq("id", instalacaoId);
       if (error) throw new Error(error.message);
@@ -154,7 +158,13 @@ function InstalacaoDetalhe() {
                   <Label htmlFor={campo}>{label}</Label>
                   <Input
                     id={campo}
-                    type={campo === "data_instalacao" ? "date" : "text"}
+                    type={
+                      campo === "data_instalacao" || campo === "proxima_manutencao"
+                        ? "date"
+                        : campo === "periodicidade_meses"
+                          ? "number"
+                          : "text"
+                    }
                     value={form[campo] ?? ""}
                     onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
                   />

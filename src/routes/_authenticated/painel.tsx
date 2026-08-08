@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Building2, FileText, Search, Users } from "lucide-react";
+import { AlertTriangle, Building2, FileText, Search, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,14 @@ function Painel() {
       ),
     };
   }, [t, clientes.data, instalacoes.data, documentos.data]);
+
+  const manutencoes = useMemo(() => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() + 30);
+    return (instalacoes.data ?? [])
+      .filter((i) => i.proxima_manutencao && new Date(i.proxima_manutencao) <= limite)
+      .sort((a, b) => (a.proxima_manutencao! < b.proxima_manutencao! ? -1 : 1));
+  }, [instalacoes.data]);
 
   return (
     <div className="space-y-8">
@@ -115,6 +123,37 @@ function Painel() {
             <Stat icon={Building2} label="Instalações" valor={instalacoes.data?.length ?? 0} />
             <Stat icon={FileText} label="Documentos" valor={documentos.data?.length ?? 0} />
           </div>
+
+          {manutencoes.length > 0 && (
+            <Card className="border-accent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-accent" /> Manutenções a vencer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {manutencoes.map((i) => (
+                  <Link
+                    key={i.id}
+                    to="/instalacoes/$instalacaoId"
+                    params={{ instalacaoId: i.id }}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3 hover:border-accent"
+                  >
+                    <div>
+                      <div className="font-medium">{i.entidade || i.morada || "Instalação"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Próxima manutenção: {dataPT(i.proxima_manutencao)}
+                      </div>
+                    </div>
+                    <Badge variant={new Date(i.proxima_manutencao!) < new Date() ? "destructive" : "secondary"}>
+                      {new Date(i.proxima_manutencao!) < new Date() ? "Em atraso" : "A vencer"}
+                    </Badge>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
 
           <Card>
             <CardHeader>
