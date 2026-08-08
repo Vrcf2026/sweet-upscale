@@ -13,11 +13,11 @@ export const Route = createFileRoute("/")({
         content:
           "Gera relatórios técnicos, livros de registo, declarações e autos de instalação, com assinatura no ecrã e exportação em PDF.",
       },
-      { property: "og:title", content: "Documentos de Segurança Privada" },
+      { property: "og:title", content: "Documentos de Segurança Privada — instaladores PSP" },
       {
         property: "og:description",
         content:
-          "Gestão de clientes, instalações e documentos oficiais para instaladores certificados com registo prévio PSP.",
+          "Gera relatórios técnicos, livros de registo, declarações e autos de instalação, com assinatura no ecrã e exportação em PDF.",
       },
     ],
   }),

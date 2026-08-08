@@ -79,14 +79,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Documentos de Segurança Privada" },
+      { title: "Documentos de Segurança Privada — instaladores PSP" },
       {
         name: "description",
         content:
-          "Gestão de clientes, instalações e documentos oficiais para instaladores de sistemas de segurança com registo prévio PSP.",
+          "Gera relatórios técnicos, livros de registo, declarações e autos de instalação, com assinatura no ecrã e exportação em PDF.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "Documentos de Segurança Privada — instaladores PSP" },
+      { name: "twitter:title", content: "Documentos de Segurança Privada — instaladores PSP" },
+      { property: "og:description", content: "Gera relatórios técnicos, livros de registo, declarações e autos de instalação, com assinatura no ecrã e exportação em PDF." },
+      { name: "twitter:description", content: "Gera relatórios técnicos, livros de registo, declarações e autos de instalação, com assinatura no ecrã e exportação em PDF." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/01a06d02a3d2c23a0316fa8578b26ee7/id-preview-f6569ae9--f3e7c791-cb96-4e02-9e0b-7200065e6508.lovable.app-1786223128288.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/01a06d02a3d2c23a0316fa8578b26ee7/id-preview-f6569ae9--f3e7c791-cb96-4e02-9e0b-7200065e6508.lovable.app-1786223128288.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
