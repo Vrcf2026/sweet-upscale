@@ -55,6 +55,7 @@ const CSS = `
   .doc img.foto { max-width:100%; max-height:70mm; border:1px solid #999; margin-top:2mm; }
   .doc ul.chk { list-style:none; padding:0; margin:2mm 0; columns:2; }
   .doc ul.chk li { padding:.5mm 0; font-size:10px; }
+  .doc .legal { margin-top:8mm; border-top:1px solid #999; padding-top:2mm; font-size:8.5px; color:#444; line-height:1.4; }
 `;
 
 function header(ctx: DocContext, titulo: string) {
