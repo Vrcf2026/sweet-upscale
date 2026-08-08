@@ -49,6 +49,14 @@ function Painel() {
     };
   }, [t, clientes.data, instalacoes.data, documentos.data]);
 
+  const manutencoes = useMemo(() => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() + 30);
+    return (instalacoes.data ?? [])
+      .filter((i) => i.proxima_manutencao && new Date(i.proxima_manutencao) <= limite)
+      .sort((a, b) => (a.proxima_manutencao! < b.proxima_manutencao! ? -1 : 1));
+  }, [instalacoes.data]);
+
   return (
     <div className="space-y-8">
       <div>
