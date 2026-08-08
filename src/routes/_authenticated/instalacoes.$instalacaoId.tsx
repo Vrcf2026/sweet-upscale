@@ -158,7 +158,13 @@ function InstalacaoDetalhe() {
                   <Label htmlFor={campo}>{label}</Label>
                   <Input
                     id={campo}
-                    type={campo === "data_instalacao" ? "date" : "text"}
+                    type={
+                      campo === "data_instalacao" || campo === "proxima_manutencao"
+                        ? "date"
+                        : campo === "periodicidade_meses"
+                          ? "number"
+                          : "text"
+                    }
                     value={form[campo] ?? ""}
                     onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
                   />
