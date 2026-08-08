@@ -233,6 +233,8 @@ export type Database = {
           monitorizado_por: string | null
           morada: string | null
           num_registo: string | null
+          periodicidade_meses: number
+          proxima_manutencao: string | null
           responsavel: string | null
           sistema_id: string | null
           tipo_sistema: string | null
@@ -250,6 +252,8 @@ export type Database = {
           monitorizado_por?: string | null
           morada?: string | null
           num_registo?: string | null
+          periodicidade_meses?: number
+          proxima_manutencao?: string | null
           responsavel?: string | null
           sistema_id?: string | null
           tipo_sistema?: string | null
@@ -267,6 +271,8 @@ export type Database = {
           monitorizado_por?: string | null
           morada?: string | null
           num_registo?: string | null
+          periodicidade_meses?: number
+          proxima_manutencao?: string | null
           responsavel?: string | null
           sistema_id?: string | null
           tipo_sistema?: string | null
