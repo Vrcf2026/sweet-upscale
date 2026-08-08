@@ -116,6 +116,37 @@ function Painel() {
             <Stat icon={FileText} label="Documentos" valor={documentos.data?.length ?? 0} />
           </div>
 
+          {manutencoes.length > 0 && (
+            <Card className="border-accent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-accent" /> Manutenções a vencer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {manutencoes.map((i) => (
+                  <Link
+                    key={i.id}
+                    to="/instalacoes/$instalacaoId"
+                    params={{ instalacaoId: i.id }}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3 hover:border-accent"
+                  >
+                    <div>
+                      <div className="font-medium">{i.entidade || i.morada || "Instalação"}</div>
+                      <div className="text-sm text-muted-foreground">
+                        Próxima manutenção: {dataPT(i.proxima_manutencao)}
+                      </div>
+                    </div>
+                    <Badge variant={new Date(i.proxima_manutencao!) < new Date() ? "destructive" : "secondary"}>
+                      {new Date(i.proxima_manutencao!) < new Date() ? "Em atraso" : "A vencer"}
+                    </Badge>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+
           <Card>
             <CardHeader>
               <CardTitle>Documentos recentes</CardTitle>
