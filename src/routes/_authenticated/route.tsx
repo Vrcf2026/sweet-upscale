@@ -19,6 +19,7 @@ const NAV = [
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/documentos", label: "Documentos", icon: FileText },
   { to: "/empresa", label: "Empresa", icon: Building2 },
+  { to: "/backup", label: "Backup", icon: Download },
 ] as const;
 
 function Layout() {
