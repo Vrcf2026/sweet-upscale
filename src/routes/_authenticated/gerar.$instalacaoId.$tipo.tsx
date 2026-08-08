@@ -45,18 +45,23 @@ const CAMPOS: Record<DocTipo, [string, string, "input" | "area" | "date" | "time
     ["trabalhos", "Trabalhos efetuados", "area"],
     ["conclusao", "Conclusão", "area"],
   ],
-  livro: [["nomeAssinante", "Nome do responsável que assina", "input"]],
+  livro: [],
   declaracao: [
     ["texto", "Texto da declaração (opcional)", "area"],
     ["servicos", "Serviços contratados", "area"],
-    ["nomeAssinante", "Nome de quem assina", "input"],
   ],
   auto: [
+    ["retencao", "Retenção de imagens (dias)", "input"],
     ["testes", "Testes efetuados", "area"],
     ["observacoes", "Observações", "area"],
-    ["nomeAssinante", "Nome de quem assina", "input"],
   ],
 };
+
+const ASSINANTE: [string, string][] = [
+  ["nomeAssinante", "Nome de quem assina"],
+  ["qualidadeAssinante", "Qualidade (ex.: responsável pelo sistema)"],
+  ["docAssinante", "N.º CC / NIF"],
+];
 
 function Gerar() {
   const { instalacaoId, tipo } = Route.useParams();
