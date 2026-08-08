@@ -194,6 +194,11 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${tabelaEquipamento(ctx.equipamentos)}
       <h2>Checklist de configuração e privacidade</h2>
       <ul class="chk">${chk}</ul>
+      <h2>Videovigilância — proteção de dados</h2>
+      <div>Prazo de retenção das imagens: ${esc(ctx.form["retencao"] || "30")} dias, findo o qual são
+      automaticamente destruídas, nos termos do artigo 31.º da Lei n.º 34/2013, de 16 de maio.
+      O sistema não capta a via pública e encontra-se afixado, em local visível, o aviso de
+      videovigilância exigido pelo RGPD.</div>
       <h2>Testes efetuados</h2>
       <div>${esc(ctx.form["testes"] ?? "")}</div>
       <h2>Observações</h2>
@@ -202,7 +207,7 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
-  return `<style>${CSS}</style><div class="doc">${body}</div>`;
+  return `<style>${CSS}</style><div class="doc">${body}${rodape(ctx)}</div>`;
 }
 
 export const CHECKLIST_AUTO = [
