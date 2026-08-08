@@ -222,10 +222,24 @@ function Gerar() {
           )}
 
           <Card>
-            <CardContent className="p-6">
+            <CardHeader>
+              <CardTitle>Identificação de quem assina</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {ASSINANTE.map(([campo, label]) => (
+                <div key={campo} className="space-y-2">
+                  <Label htmlFor={campo}>{label}</Label>
+                  <Input
+                    id={campo}
+                    value={form[campo] ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
+                  />
+                </div>
+              ))}
               <SignaturePad value={assinatura} onChange={setAssinatura} />
             </CardContent>
           </Card>
+
 
           <Button onClick={guardar} disabled={aGuardar} className="w-full">
             Gerar e guardar documento
