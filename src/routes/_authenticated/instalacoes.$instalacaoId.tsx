@@ -103,6 +103,8 @@ function InstalacaoDetalhe() {
           monitorizado_por: form["monitorizado_por"] ?? null,
           instalado_por: form["instalado_por"] ?? null,
           data_instalacao: form["data_instalacao"] || null,
+          periodicidade_meses: Number(form["periodicidade_meses"]) || 12,
+          proxima_manutencao: form["proxima_manutencao"] || null,
         })
         .eq("id", instalacaoId);
       if (error) throw new Error(error.message);
