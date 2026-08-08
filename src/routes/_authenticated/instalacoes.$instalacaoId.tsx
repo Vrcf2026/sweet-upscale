@@ -46,6 +46,8 @@ const CAMPOS = [
   ["monitorizado_por", "Monitorizado por"],
   ["instalado_por", "Instalado por"],
   ["data_instalacao", "Data de instalação"],
+  ["periodicidade_meses", "Periodicidade de manutenção (meses)"],
+  ["proxima_manutencao", "Próxima manutenção"],
 ] as const;
 
 const TIPOS: DocTipo[] = ["relatorio", "livro", "declaracao", "auto"];
