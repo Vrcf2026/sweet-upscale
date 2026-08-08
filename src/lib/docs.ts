@@ -108,9 +108,24 @@ function assinaturas(ctx: DocContext, esquerda: string, direita: string) {
   const a = ctx.assinatura
     ? `<img class="assin" src="${ctx.assinatura}" alt="Assinatura do cliente" />`
     : "";
+  const nome = ctx.form["nomeAssinante"] ?? ctx.cliente?.nome ?? "";
+  const qualidade = ctx.form["qualidadeAssinante"] ?? "";
+  const idDoc = ctx.form["docAssinante"] ?? "";
+  const detalhes = [qualidade, idDoc].filter(Boolean).join(" &middot; ");
   return `<div class="sign">
     <div>${esc(ctx.empresa?.tecnico ?? "")}<br/><span class="muted">${esc(esquerda)}</span></div>
-    <div>${a}${esc(ctx.form["nomeAssinante"] ?? ctx.cliente?.nome ?? "")}<br/><span class="muted">${esc(direita)}</span></div>
+    <div>${a}${esc(nome)}<br/>${detalhes ? `<span class="muted">${detalhes}</span><br/>` : ""}<span class="muted">${esc(direita)}</span></div>
+  </div>`;
+}
+
+function rodape(ctx: DocContext) {
+  const e = ctx.empresa;
+  const emissao = e?.data_emissao ? ` emitido em ${dataPT(e.data_emissao)}` : "";
+  return `<div class="legal">
+    ${esc(e?.nome ?? "")} — entidade titular do Registo Prévio n.º ${esc(e?.registo ?? "—")}${emissao},
+    emitido pela Polícia de Segurança Pública nos termos da Lei n.º 34/2013, de 16 de maio, e da
+    Portaria n.º 273/2013, de 20 de agosto. NIPC ${esc(e?.nipc ?? "—")}.
+    Documento conservado pela entidade titular pelo prazo mínimo de 5 anos.
   </div>`;
 }
 
