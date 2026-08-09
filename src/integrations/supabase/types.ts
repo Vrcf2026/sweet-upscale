@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      acessos: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          id: string
+          instalacao_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          instalacao_id?: string | null
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          instalacao_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acessos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acessos_instalacao_id_fkey"
+            columns: ["instalacao_id"]
+            isOneToOne: false
+            referencedRelation: "instalacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           contacto: string | null
@@ -362,15 +401,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       next_doc_number: { Args: never; Returns: string }
+      pode_cliente: { Args: { _cliente_id: string }; Returns: boolean }
+      pode_instalacao: { Args: { _instalacao_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "superadmin" | "tecnico"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -497,6 +566,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["superadmin", "tecnico"],
+    },
   },
 } as const
