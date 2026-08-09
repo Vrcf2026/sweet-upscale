@@ -64,7 +64,18 @@ function Layout() {
                 {item.label}
               </Link>
             ))}
+            {isSuperadmin && (
+              <Link
+                to="/utilizadores"
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
+                activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+              >
+                <UserCog className="h-4 w-4" />
+                Utilizadores
+              </Link>
+            )}
           </nav>
+
           <Button variant="ghost" size="sm" onClick={sair} className="hover:bg-sidebar-accent">
             <LogOut className="h-4 w-4" /> Sair
           </Button>
