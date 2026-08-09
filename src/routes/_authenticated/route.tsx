@@ -1,8 +1,17 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Building2, Download, FileText, LogOut, ShieldCheck, Users } from "lucide-react";
+import {
+  Building2,
+  Download,
+  FileText,
+  LogOut,
+  ShieldCheck,
+  UserCog,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useRole } from "@/hooks/useRole";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -25,6 +34,7 @@ const NAV = [
 function Layout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isSuperadmin } = useRole();
 
   async function sair() {
     await queryClient.cancelQueries();
@@ -32,6 +42,7 @@ function Layout() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
 
   return (
     <div className="min-h-screen bg-background">
