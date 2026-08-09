@@ -39,6 +39,12 @@ function AuthPage() {
   const [nome, setNome] = useState("");
   const [aguarda, setAguarda] = useState(false);
 
+  useEffect(() => {
+    void arrancarSuperadmin().catch(() => undefined);
+  }, []);
+
+
+
   async function submeter(e: React.FormEvent) {
     e.preventDefault();
     setAguarda(true);
