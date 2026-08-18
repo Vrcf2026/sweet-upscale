@@ -203,7 +203,7 @@ function Gerar() {
     ],
   );
 
-  async function guardar() {
+  async function guardar(comoRascunho = false) {
     try {
       setAGuardar(true);
       const user_id = await getUserId();
@@ -233,14 +233,16 @@ function Gerar() {
           tipo: docTipo,
           numero,
           resumo: form["tipo"] ?? form["testes"] ?? null,
-          estado: assinatura ? "assinado" : "rascunho",
+          estado: comoRascunho ? "rascunho" : assinatura ? "assinado" : "rascunho",
           html: finalHtml,
           dados: form,
         })
         .select("id")
         .single();
       if (error) throw new Error(error.message);
-      toast.success(`Documento ${numero} criado`);
+      toast.success(
+        comoRascunho ? `Rascunho ${numero} guardado` : `Documento ${numero} criado`,
+      );
       navigate({ to: "/documentos/$documentoId", params: { documentoId: data.id } });
     } catch (e) {
       toast.error((e as Error).message);
@@ -251,7 +253,23 @@ function Gerar() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{DOC_LABEL[docTipo]}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{DOC_LABEL[docTipo]}</h1>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              navigate({ to: "/instalacoes/$instalacaoId", params: { instalacaoId } })
+            }
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </Button>
+          <Button variant="secondary" size="sm" disabled={aGuardar} onClick={() => guardar(true)}>
+            <Save className="h-4 w-4" /> Guardar rascunho
+          </Button>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
