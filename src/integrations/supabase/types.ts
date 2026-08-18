@@ -266,6 +266,7 @@ export type Database = {
           created_at: string
           data_instalacao: string | null
           entidade: string | null
+          estado: string
           id: string
           instalado_por: string | null
           localidade: string | null
@@ -285,6 +286,7 @@ export type Database = {
           created_at?: string
           data_instalacao?: string | null
           entidade?: string | null
+          estado?: string
           id?: string
           instalado_por?: string | null
           localidade?: string | null
@@ -304,6 +306,7 @@ export type Database = {
           created_at?: string
           data_instalacao?: string | null
           entidade?: string | null
+          estado?: string
           id?: string
           instalado_por?: string | null
           localidade?: string | null
