@@ -261,6 +261,8 @@ export type Database = {
       }
       instalacoes: {
         Row: {
+          autoridade: string | null
+          autoridade_subunidade: string | null
           cliente_id: string
           contacto_resp: string | null
           created_at: string
@@ -281,6 +283,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          autoridade?: string | null
+          autoridade_subunidade?: string | null
           cliente_id: string
           contacto_resp?: string | null
           created_at?: string
@@ -301,6 +305,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          autoridade?: string | null
+          autoridade_subunidade?: string | null
           cliente_id?: string
           contacto_resp?: string | null
           created_at?: string
