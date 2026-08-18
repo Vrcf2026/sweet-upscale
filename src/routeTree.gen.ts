@@ -20,6 +20,7 @@ import { Route as AuthenticatedClientesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedClientesClienteIdRouteImport } from './routes/_authenticated/clientes.$clienteId'
 import { Route as AuthenticatedDocumentosIndexRouteImport } from './routes/_authenticated/documentos.index'
 import { Route as AuthenticatedDocumentosDocumentoIdRouteImport } from './routes/_authenticated/documentos.$documentoId'
+import { Route as AuthenticatedInstalacoesIndexRouteImport } from './routes/_authenticated/instalacoes.index'
 import { Route as AuthenticatedInstalacoesInstalacaoIdRouteImport } from './routes/_authenticated/instalacoes.$instalacaoId'
 import { Route as AuthenticatedGerarInstalacaoIdTipoRouteImport } from './routes/_authenticated/gerar.$instalacaoId.$tipo'
 
@@ -82,6 +83,12 @@ const AuthenticatedDocumentosDocumentoIdRoute =
     path: '/documentos/$documentoId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInstalacoesIndexRoute =
+  AuthenticatedInstalacoesIndexRouteImport.update({
+    id: '/instalacoes/',
+    path: '/instalacoes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInstalacoesInstalacaoIdRoute =
   AuthenticatedInstalacoesInstalacaoIdRouteImport.update({
     id: '/instalacoes/$instalacaoId',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/documentos/': typeof AuthenticatedDocumentosIndexRoute
+  '/instalacoes/': typeof AuthenticatedInstalacoesIndexRoute
   '/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRoutesByTo {
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
   '/documentos': typeof AuthenticatedDocumentosIndexRoute
+  '/instalacoes': typeof AuthenticatedInstalacoesIndexRoute
   '/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRoutesById {
@@ -137,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/documentos/': typeof AuthenticatedDocumentosIndexRoute
+  '/_authenticated/instalacoes/': typeof AuthenticatedInstalacoesIndexRoute
   '/_authenticated/gerar/$instalacaoId/$tipo': typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 export interface FileRouteTypes {
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/instalacoes/$instalacaoId'
     | '/clientes/'
     | '/documentos/'
+    | '/instalacoes/'
     | '/gerar/$instalacaoId/$tipo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/instalacoes/$instalacaoId'
     | '/clientes'
     | '/documentos'
+    | '/instalacoes'
     | '/gerar/$instalacaoId/$tipo'
   id:
     | '__root__'
@@ -182,6 +194,7 @@ export interface FileRouteTypes {
     | '/_authenticated/instalacoes/$instalacaoId'
     | '/_authenticated/clientes/'
     | '/_authenticated/documentos/'
+    | '/_authenticated/instalacoes/'
     | '/_authenticated/gerar/$instalacaoId/$tipo'
   fileRoutesById: FileRoutesById
 }
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocumentosDocumentoIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/instalacoes/': {
+      id: '/_authenticated/instalacoes/'
+      path: '/instalacoes'
+      fullPath: '/instalacoes/'
+      preLoaderRoute: typeof AuthenticatedInstalacoesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/instalacoes/$instalacaoId': {
       id: '/_authenticated/instalacoes/$instalacaoId'
       path: '/instalacoes/$instalacaoId'
@@ -297,6 +317,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInstalacoesInstalacaoIdRoute: typeof AuthenticatedInstalacoesInstalacaoIdRoute
   AuthenticatedClientesIndexRoute: typeof AuthenticatedClientesIndexRoute
   AuthenticatedDocumentosIndexRoute: typeof AuthenticatedDocumentosIndexRoute
+  AuthenticatedInstalacoesIndexRoute: typeof AuthenticatedInstalacoesIndexRoute
   AuthenticatedGerarInstalacaoIdTipoRoute: typeof AuthenticatedGerarInstalacaoIdTipoRoute
 }
 
@@ -312,6 +333,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedInstalacoesInstalacaoIdRoute,
   AuthenticatedClientesIndexRoute: AuthenticatedClientesIndexRoute,
   AuthenticatedDocumentosIndexRoute: AuthenticatedDocumentosIndexRoute,
+  AuthenticatedInstalacoesIndexRoute: AuthenticatedInstalacoesIndexRoute,
   AuthenticatedGerarInstalacaoIdTipoRoute:
     AuthenticatedGerarInstalacaoIdTipoRoute,
 }

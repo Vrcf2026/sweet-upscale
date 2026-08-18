@@ -69,6 +69,13 @@ export type Intervencao = {
   tecnico: string | null;
 };
 
+export const TIPOS_SISTEMA = [
+  "Videovigilância",
+  "Alarme",
+  "Videovigilância + Alarme",
+  "Outro",
+] as const;
+
 export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto";
 
 export type Documento = {
