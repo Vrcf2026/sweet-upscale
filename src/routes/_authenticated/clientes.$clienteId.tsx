@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MoradaLink } from "@/components/MoradaLink";
+import { ApagarDialog } from "@/components/ApagarDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCliente, fetchInstalacoes, getUserId } from "@/lib/data";
+import { fetchCliente, fetchDocumentos, fetchInstalacoes, getUserId } from "@/lib/data";
 import { TIPOS_SISTEMA } from "@/lib/model";
 
 export const Route = createFileRoute("/_authenticated/clientes/$clienteId")({
@@ -73,6 +74,11 @@ function ClienteDetalhe() {
   const instalacoes = useQuery({
     queryKey: ["instalacoes", clienteId],
     queryFn: () => fetchInstalacoes(clienteId),
+  });
+
+  const documentos = useQuery({
+    queryKey: ["documentos", "cliente", clienteId],
+    queryFn: () => fetchDocumentos({ clienteId }),
   });
 
   const [form, setForm] = useState<Record<string, string>>({});
