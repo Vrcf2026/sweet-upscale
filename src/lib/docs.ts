@@ -1,11 +1,4 @@
-import type {
-  Cliente,
-  DocTipo,
-  Empresa,
-  Equipamento,
-  Instalacao,
-  Intervencao,
-} from "./model";
+import type { Cliente, DocTipo, Empresa, Equipamento, Instalacao, Intervencao } from "./model";
 
 export function esc(value: unknown): string {
   if (value === null || value === undefined) return "";
@@ -35,6 +28,9 @@ export type DocContext = {
   checklist?: { label: string; ok: boolean }[];
   assinatura?: string | null;
   foto?: string | null;
+  avaliacaoFoto?: string | null;
+  certificacoes?: { equip: string; situacao: string; nota: string }[];
+  pendencias?: string[];
 };
 
 const CSS = `
@@ -56,6 +52,13 @@ const CSS = `
   .doc ul.chk { list-style:none; padding:0; margin:2mm 0; columns:2; }
   .doc ul.chk li { padding:.5mm 0; font-size:10px; }
   .doc .legal { margin-top:8mm; border-top:1px solid #999; padding-top:2mm; font-size:8.5px; color:#444; line-height:1.4; }
+  .doc .pendencias { margin:4mm 0; padding:3mm 4mm; background:#fff6dd; border:1px solid #e8c766; border-radius:2mm; }
+  .doc .pendencias h3 { margin:0 0 1.5mm; font-size:11px; color:#7a5c00; }
+  .doc .pendencias ul { margin:0; padding-left:4mm; font-size:10px; }
+  .doc .nota-ia { margin-top:2mm; padding:2.5mm 3.5mm; background:#eef3fb; border:1px solid #b9cdea; border-radius:2mm; font-size:10px; }
+  .doc .nota-ia b { color:#1d4d8f; }
+  .doc .cert-ok { color:#1a7a3c; }
+  .doc .cert-alerta { color:#a12f2f; }
 `;
 
 function header(ctx: DocContext, titulo: string) {
@@ -93,16 +96,41 @@ function blocoCliente(ctx: DocContext) {
   </div>`;
 }
 
-function tabelaEquipamento(eq: Equipamento[]) {
+function blocoPendencias(ctx: DocContext) {
+  const lista = (ctx.pendencias ?? []).filter(Boolean);
+  if (!lista.length) return "";
+  return `<div class="pendencias">
+    <h3>⚠ Por confirmar antes de entregar ao cliente</h3>
+    <ul>${lista.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+  </div>`;
+}
+
+function tabelaEquipamento(eq: Equipamento[], certificacoes?: DocContext["certificacoes"]) {
   if (!eq.length) return "";
+  const certPorNome = new Map((certificacoes ?? []).map((c) => [c.equip, c]));
   return `<h2>Equipamento instalado</h2>
-  <table><thead><tr><th style="width:6mm">#</th><th>Equipamento</th><th>Marca / Modelo</th><th>N.º de série</th><th>Localização</th></tr></thead>
+  <table><thead><tr><th style="width:6mm">#</th><th>Equipamento</th><th>Marca / Modelo</th><th>N.º de série</th><th>Localização</th>${
+    certificacoes?.length ? "<th>Normas técnicas</th>" : ""
+  }</tr></thead>
   <tbody>${eq
-    .map(
-      (r, n) =>
-        `<tr><td>${n + 1}</td><td>${esc(r.equip)}</td><td>${esc(r.marca)}</td><td>${esc(r.serie)}</td><td>${esc(r.local)}</td></tr>`,
-    )
-    .join("")}</tbody></table>`;
+    .map((r, n) => {
+      const cert = certPorNome.get(r.equip);
+      const certCel = certificacoes?.length
+        ? `<td class="${cert?.situacao === "confirmado" ? "cert-ok" : "cert-alerta"}">${
+            cert
+              ? cert.situacao === "confirmado"
+                ? `✔ ${esc(cert.nota)}`
+                : `✘ não confirmado — ${esc(cert.nota)}`
+              : "—"
+          }</td>`
+        : "";
+      return `<tr><td>${n + 1}</td><td>${esc(r.equip)}</td><td>${esc(r.marca)}</td><td>${esc(r.serie)}</td><td>${esc(r.local)}</td>${certCel}</tr>`;
+    })
+    .join("")}</tbody></table>${
+    certificacoes?.length
+      ? '<div class="muted" style="margin-top:1mm">Normas verificadas com base no conhecimento geral da IA, sem acesso à internet em tempo real — confirmar sempre com a ficha técnica do fabricante.</div>'
+      : ""
+  }`;
 }
 
 function assinaturas(ctx: DocContext, esquerda: string, direita: string) {
@@ -161,13 +189,20 @@ export function buildDocumentHtml(ctx: DocContext): string {
               `<tr><td>${dataPT(r.data)}</td><td>${esc(r.hora)}</td><td>${esc(r.tipo)}</td><td>${esc(r.modo)}</td><td>${esc(r.causa)}</td><td>${esc(r.trabalhos)}</td><td>${esc(r.num_relatorio)}</td><td>${esc(r.tecnico)}</td></tr>`,
           )
           .join("")
-      : `<tr><td colspan="8" class="muted">Sem intervenções registadas.</td></tr>`;
+      : "";
+    const linhasBrancas = Array.from({ length: 15 })
+      .map(
+        () =>
+          `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`,
+      )
+      .join("");
     body = `${header(ctx, "Livro de Registos do Sistema")}
       ${blocoCliente(ctx)}
       ${tabelaEquipamento(ctx.equipamentos)}
       <h2>Registo de intervenções</h2>
+      <div class="muted">Linhas em branco incluídas para continuar o registo manualmente após impressão.</div>
       <table><thead><tr><th>Data</th><th>Hora</th><th>Tipo</th><th>Modo</th><th>Causa</th><th>Trabalhos</th><th>N.º relatório</th><th>Técnico</th></tr></thead>
-      <tbody>${linhas}</tbody></table>
+      <tbody>${linhas}${linhasBrancas}</tbody></table>
       ${assinaturas(ctx, "O técnico responsável", "O responsável pelo sistema")}`;
   }
 
@@ -189,9 +224,10 @@ export function buildDocumentHtml(ctx: DocContext): string {
       .map((c) => `<li>${c.ok ? "&#9745;" : "&#9744;"} ${esc(c.label)}</li>`)
       .join("");
     body = `${header(ctx, "Auto de Instalação")}
-      <div class="muted" style="margin-top:2mm">Documento de boa prática (não oficial)</div>
+      <div class="muted" style="margin-top:2mm">Documento de boa prática (não oficial) — relatório final para o cliente</div>
+      ${blocoPendencias(ctx)}
       ${blocoCliente(ctx)}
-      ${tabelaEquipamento(ctx.equipamentos)}
+      ${tabelaEquipamento(ctx.equipamentos, ctx.certificacoes)}
       <h2>Checklist de configuração e privacidade</h2>
       <ul class="chk">${chk}</ul>
       <h2>Videovigilância — proteção de dados</h2>
@@ -204,6 +240,11 @@ export function buildDocumentHtml(ctx: DocContext): string {
       <h2>Observações</h2>
       <div>${esc(ctx.form["observacoes"] ?? "")}</div>
       ${ctx.foto ? `<h2>Foto do local</h2><img class="foto" src="${ctx.foto}" alt="Foto do local da instalação" />` : ""}
+      ${
+        ctx.avaliacaoFoto
+          ? `<div class="nota-ia"><b>Avaliação de apoio (IA):</b> ${esc(ctx.avaliacaoFoto)}</div>`
+          : ""
+      }
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 

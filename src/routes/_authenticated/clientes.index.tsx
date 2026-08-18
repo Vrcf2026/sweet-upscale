@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchClientes, getUserId } from "@/lib/data";
+import { extrairTextoPdf } from "@/lib/ficheiros";
+import { extrairOrcamento } from "@/lib/ia.functions";
 
 export const Route = createFileRoute("/_authenticated/clientes/")({
   head: () => ({
@@ -44,10 +46,13 @@ const CAMPOS = [
 
 function ClientesPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data } = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const [termo, setTermo] = useState("");
   const [aberto, setAberto] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [aImportarOrcamento, setAImportarOrcamento] = useState(false);
+  const orcamentoRef = useRef<HTMLInputElement>(null);
 
   const criar = useMutation({
     mutationFn: async () => {
@@ -66,6 +71,88 @@ function ClientesPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  async function aoImportarOrcamento(file: File) {
+    try {
+      setAImportarOrcamento(true);
+      const texto = await extrairTextoPdf(file);
+      if (!texto.trim()) throw new Error("Não foi possível ler texto do PDF");
+      const { cliente, instalacao, equipamentos } = await extrairOrcamento({ data: { texto } });
+      const user_id = await getUserId();
+
+      const nomeCliente = (cliente["nome"] ?? "").trim();
+      let clienteId: string | null = null;
+
+      if (nomeCliente) {
+        const { data: existentes, error: erroBusca } = await supabase
+          .from("clientes")
+          .select("id, nome")
+          .ilike("nome", nomeCliente);
+        if (erroBusca) throw new Error(erroBusca.message);
+        const match = existentes?.find(
+          (c) => c.nome.trim().toLowerCase() === nomeCliente.toLowerCase(),
+        );
+        clienteId = match?.id ?? null;
+      }
+
+      if (!clienteId) {
+        const { data: novoCliente, error: erroCliente } = await supabase
+          .from("clientes")
+          .insert({
+            user_id,
+            nome: nomeCliente || "Cliente sem nome",
+            nif: cliente["nif"] || null,
+            morada: cliente["morada"] || null,
+            localidade: cliente["localidade"] || null,
+            cp: cliente["cp"] || null,
+            tlm: cliente["tlm"] || null,
+            email: cliente["email"] || null,
+          })
+          .select("id")
+          .single();
+        if (erroCliente) throw new Error(erroCliente.message);
+        clienteId = novoCliente.id;
+      }
+
+      const { data: novaInstalacao, error: erroInstalacao } = await supabase
+        .from("instalacoes")
+        .insert({
+          user_id,
+          cliente_id: clienteId,
+          entidade: instalacao["entidade"] || nomeCliente || null,
+          tipo_sistema: instalacao["tipo_sistema"] || null,
+          morada: instalacao["morada"] || cliente["morada"] || null,
+          localidade: instalacao["localidade"] || cliente["localidade"] || null,
+        })
+        .select("id")
+        .single();
+      if (erroInstalacao) throw new Error(erroInstalacao.message);
+
+      const linhasEquip = (equipamentos ?? []).filter((e) => e.equip?.trim());
+      if (linhasEquip.length) {
+        const { error: erroEquip } = await supabase.from("equipamentos").insert(
+          linhasEquip.map((e, n) => ({
+            instalacao_id: novaInstalacao.id,
+            user_id,
+            equip: e.equip,
+            marca: e.marca || null,
+            serie: e.serie || null,
+            local: e.local || null,
+            ordem: n,
+          })),
+        );
+        if (erroEquip) throw new Error(erroEquip.message);
+      }
+
+      toast.success("Instalação criada a partir do orçamento");
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      navigate({ to: "/instalacoes/$instalacaoId", params: { instalacaoId: novaInstalacao.id } });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAImportarOrcamento(false);
+    }
+  }
 
   const t = termo.trim().toLowerCase();
   const lista = (data ?? []).filter((c) =>
@@ -113,6 +200,29 @@ function ClientesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Button
+          variant="secondary"
+          disabled={aImportarOrcamento}
+          onClick={() => orcamentoRef.current?.click()}
+        >
+          {aImportarOrcamento ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
+          Nova instalação a partir de orçamento (PDF)
+        </Button>
+        <input
+          ref={orcamentoRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void aoImportarOrcamento(f);
+            e.target.value = "";
+          }}
+        />
       </div>
 
       <div className="relative">
