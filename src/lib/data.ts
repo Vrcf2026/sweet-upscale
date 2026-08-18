@@ -75,7 +75,6 @@ export async function fetchDocumento(id: string) {
 }
 
 export async function proximoNumero() {
-  const res = await supabase.rpc("next_doc_number");
-  if (res.error) throw new Error(res.error.message);
-  return String(res.data);
+  const { proximoNumeroDoc } = await import("./numeracao.functions");
+  return String(await proximoNumeroDoc());
 }
