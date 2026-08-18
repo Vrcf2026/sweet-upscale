@@ -44,6 +44,8 @@ export type Instalacao = {
   periodicidade_meses: number | null;
   proxima_manutencao: string | null;
   estado: string;
+  autoridade: string | null;
+  autoridade_subunidade: string | null;
   created_at: string;
 };
 
