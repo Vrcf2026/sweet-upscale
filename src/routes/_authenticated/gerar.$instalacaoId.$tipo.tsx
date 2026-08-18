@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -446,7 +447,7 @@ function Gerar() {
             </CardContent>
           </Card>
 
-          <Button onClick={guardar} disabled={aGuardar} className="w-full">
+          <Button onClick={() => guardar(false)} disabled={aGuardar} className="w-full">
             Gerar e guardar documento
           </Button>
         </div>
