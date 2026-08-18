@@ -17,15 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MoradaLink } from "@/components/MoradaLink";
+import { ApagarDialog } from "@/components/ApagarDialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCliente,
+  fetchDocumentos,
   fetchEquipamentos,
   fetchInstalacao,
   fetchIntervencoes,
   getUserId,
 } from "@/lib/data";
-import { DOC_LABEL, TIPOS_SISTEMA, type DocTipo } from "@/lib/model";
+import { DOC_LABEL, ESTADOS_INSTALACAO, TIPOS_SISTEMA, type DocTipo } from "@/lib/model";
 import { dataPT } from "@/lib/docs";
 import { extrairTextoPdf, lerExcel } from "@/lib/ficheiros";
 import { estruturarEquipamento } from "@/lib/ia.functions";
@@ -56,6 +58,7 @@ const CAMPOS = [
   ["data_instalacao", "Data de instalação"],
   ["periodicidade_meses", "Periodicidade de manutenção (meses)"],
   ["proxima_manutencao", "Próxima manutenção"],
+  ["estado", "Estado da instalação"],
 ] as const;
 
 const TIPOS: DocTipo[] = ["relatorio", "livro", "declaracao", "auto"];
@@ -79,6 +82,10 @@ function InstalacaoDetalhe() {
   const intervencoes = useQuery({
     queryKey: ["intervencoes", instalacaoId],
     queryFn: () => fetchIntervencoes(instalacaoId),
+  });
+  const documentos = useQuery({
+    queryKey: ["documentos", "instalacao", instalacaoId],
+    queryFn: () => fetchDocumentos({ instalacaoId }),
   });
 
   const [form, setForm] = useState<Record<string, string>>({});
@@ -113,6 +120,7 @@ function InstalacaoDetalhe() {
           data_instalacao: form["data_instalacao"] || null,
           periodicidade_meses: Number(form["periodicidade_meses"]) || 12,
           proxima_manutencao: form["proxima_manutencao"] || null,
+          estado: form["estado"] || "ativa",
         })
         .eq("id", instalacaoId);
       if (error) throw new Error(error.message);
@@ -124,21 +132,52 @@ function InstalacaoDetalhe() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const bloqueios: string[] = [];
+  if ((documentos.data ?? []).length > 0)
+    bloqueios.push(
+      `Tem ${documentos.data!.length} documento(s) associado(s). Apaga primeiro os documentos.`,
+    );
+  if (instalacao.data && instalacao.data.estado !== "entregue")
+    bloqueios.push("A instalação tem de estar marcada como \"Entregue ao cliente\".");
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          {instalacao.data?.entidade || instalacao.data?.morada || "Instalação"}
-        </h1>
-        {cliente.data && (
-          <Link
-            to="/clientes/$clienteId"
-            params={{ clienteId: cliente.data.id }}
-            className="text-sm text-accent hover:underline"
-          >
-            {cliente.data.nome}
-          </Link>
-        )}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {instalacao.data?.entidade || instalacao.data?.morada || "Instalação"}
+          </h1>
+          {cliente.data && (
+            <Link
+              to="/clientes/$clienteId"
+              params={{ clienteId: cliente.data.id }}
+              className="text-sm text-accent hover:underline"
+            >
+              {cliente.data.nome}
+            </Link>
+          )}
+        </div>
+        <ApagarDialog
+          titulo="Apagar instalação"
+          descricao="Remove a instalação, o seu equipamento e as intervenções registadas."
+          bloqueios={bloqueios}
+          nomeBackup={`backup-instalacao-${instalacaoId}.json`}
+          recolherBackup={async () => ({
+            instalacao: instalacao.data,
+            cliente: cliente.data,
+            equipamentos: equipamentos.data ?? [],
+            intervencoes: intervencoes.data ?? [],
+          })}
+          aoApagar={async () => {
+            await supabase.from("equipamentos").delete().eq("instalacao_id", instalacaoId);
+            await supabase.from("intervencoes").delete().eq("instalacao_id", instalacaoId);
+            const { error } = await supabase.from("instalacoes").delete().eq("id", instalacaoId);
+            if (error) throw new Error(error.message);
+            toast.success("Instalação apagada");
+            queryClient.invalidateQueries({ queryKey: ["instalacoes"] });
+            window.history.back();
+          }}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -176,6 +215,22 @@ function InstalacaoDetalhe() {
                         {TIPOS_SISTEMA.map((t) => (
                           <SelectItem key={t} value={t}>
                             {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : campo === "estado" ? (
+                    <Select
+                      value={form[campo] || "ativa"}
+                      onValueChange={(v) => setForm((f) => ({ ...f, estado: v }))}
+                    >
+                      <SelectTrigger id={campo}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ESTADOS_INSTALACAO.map((e) => (
+                          <SelectItem key={e.valor} value={e.valor}>
+                            {e.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -43,6 +43,7 @@ export type Instalacao = {
   monitorizado_por: string | null;
   periodicidade_meses: number | null;
   proxima_manutencao: string | null;
+  estado: string;
   created_at: string;
 };
 
@@ -74,6 +75,12 @@ export const TIPOS_SISTEMA = [
   "Alarme",
   "Videovigilância + Alarme",
   "Outro",
+] as const;
+
+export const ESTADOS_INSTALACAO = [
+  { valor: "ativa", label: "Ativa" },
+  { valor: "concluida", label: "Concluída" },
+  { valor: "entregue", label: "Entregue ao cliente" },
 ] as const;
 
 export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto";

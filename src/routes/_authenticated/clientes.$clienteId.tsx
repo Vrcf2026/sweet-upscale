@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MoradaLink } from "@/components/MoradaLink";
+import { ApagarDialog } from "@/components/ApagarDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCliente, fetchInstalacoes, getUserId } from "@/lib/data";
+import { fetchCliente, fetchDocumentos, fetchInstalacoes, getUserId } from "@/lib/data";
 import { TIPOS_SISTEMA } from "@/lib/model";
 
 export const Route = createFileRoute("/_authenticated/clientes/$clienteId")({
@@ -73,6 +74,11 @@ function ClienteDetalhe() {
   const instalacoes = useQuery({
     queryKey: ["instalacoes", clienteId],
     queryFn: () => fetchInstalacoes(clienteId),
+  });
+
+  const documentos = useQuery({
+    queryKey: ["documentos", "cliente", clienteId],
+    queryFn: () => fetchDocumentos({ clienteId }),
   });
 
   const [form, setForm] = useState<Record<string, string>>({});
@@ -135,26 +141,32 @@ function ClienteDetalhe() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const apagar = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("clientes").delete().eq("id", clienteId);
-      if (error) throw new Error(error.message);
-    },
-    onSuccess: () => {
-      toast.success("Cliente apagado");
-      queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      window.history.back();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  const bloqueios: string[] = [];
+  if ((instalacoes.data ?? []).length > 0)
+    bloqueios.push(
+      `Tem ${instalacoes.data!.length} instalação(ões) associada(s). Apaga primeiro as instalações.`,
+    );
+  if ((documentos.data ?? []).length > 0)
+    bloqueios.push(`Tem ${documentos.data!.length} documento(s) associado(s).`);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{cliente.data?.nome ?? "Cliente"}</h1>
-        <Button variant="ghost" size="sm" onClick={() => apagar.mutate()}>
-          <Trash2 className="h-4 w-4" /> Apagar
-        </Button>
+        <ApagarDialog
+          titulo="Apagar cliente"
+          descricao="Esta ação é definitiva e remove a ficha do cliente."
+          bloqueios={bloqueios}
+          nomeBackup={`backup-cliente-${cliente.data?.nome ?? clienteId}.json`}
+          recolherBackup={async () => ({ cliente: cliente.data })}
+          aoApagar={async () => {
+            const { error } = await supabase.from("clientes").delete().eq("id", clienteId);
+            if (error) throw new Error(error.message);
+            toast.success("Cliente apagado");
+            queryClient.invalidateQueries({ queryKey: ["clientes"] });
+            window.history.back();
+          }}
+        />
       </div>
 
       <Card>

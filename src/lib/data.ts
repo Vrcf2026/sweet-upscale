@@ -63,9 +63,10 @@ export async function fetchIntervencoes(instalacaoId: string) {
   return unwrap<Intervencao[]>(res);
 }
 
-export async function fetchDocumentos(filtro?: { instalacaoId?: string }) {
+export async function fetchDocumentos(filtro?: { instalacaoId?: string; clienteId?: string }) {
   let q = supabase.from("documentos").select("*").order("created_at", { ascending: false });
   if (filtro?.instalacaoId) q = q.eq("instalacao_id", filtro.instalacaoId);
+  if (filtro?.clienteId) q = q.eq("cliente_id", filtro.clienteId);
   return unwrap<Documento[]>(await q);
 }
 
