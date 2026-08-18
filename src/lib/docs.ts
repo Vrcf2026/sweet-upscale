@@ -248,6 +248,79 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
+  if (ctx.tipo === "comunicacao") {
+    const f = ctx.form;
+    const gnr = (f["autoridade"] ?? "psp") === "gnr";
+    const autoridade = gnr
+      ? "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Guarda Nacional Republicana"
+      : "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Polícia de Segurança Pública";
+    const box = (v?: string) => (v === "sim" ? "&#9745;" : "&#9744;");
+    const contacto = (n: string) => `<div class="grid">
+      <div class="f"><b>Nome</b> ${esc(f[`contacto${n}Nome`] ?? "")}</div>
+      <div class="f"><b>Morada</b> ${esc(f[`contacto${n}Morada`] ?? "")}</div>
+      <div class="f"><b>Localidade</b> ${esc(f[`contacto${n}Localidade`] ?? "")}</div>
+      <div class="f"><b>Código postal</b> ${esc(f[`contacto${n}Cp`] ?? "")}</div>
+      <div class="f"><b>Doc. identificação</b> ${esc(f[`contacto${n}Doc`] ?? "")}</div>
+      <div class="f"><b>Telefone / Telemóvel</b> ${esc(f[`contacto${n}Tlf`] ?? "")} ${esc(f[`contacto${n}Tlm`] ?? "")}</div>
+    </div>`;
+    body = `<div class="hdr">
+        <div><div style="font-size:12px;font-weight:700">${autoridade}</div></div>
+        <div style="text-align:right">
+          <h1>Comunicação de Instalação de Alarme</h1>
+          <div class="muted">${dataPT(f["data"] ?? new Date().toISOString())}</div>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:2mm">Comunicação prevista no n.º 1 do artigo 11.º da Lei n.º 34/2013, de 16 de maio,
+      alterada e republicada pela Lei n.º 46/2019, de 8 de julho.</div>
+
+      <h2>Reservado ao serviço</h2>
+      <div class="grid">
+        <div class="f"><b>Local (subunidade)</b> ${esc(f["subunidade"] ?? "")}</div>
+        <div class="f"><b>N.º de registo</b> </div>
+        <div class="f"><b>Data</b> </div>
+      </div>
+
+      <h2>1. Comunicação (proprietário ou utilizador do alarme)</h2>
+      <div class="grid">
+        <div class="f"><b>Nome</b> ${esc(f["decNome"] ?? "")}</div>
+        <div class="f"><b>Morada</b> ${esc(f["decMorada"] ?? "")}</div>
+        <div class="f"><b>Localidade</b> ${esc(f["decLocalidade"] ?? "")}</div>
+        <div class="f"><b>Código postal</b> ${esc(f["decCp"] ?? "")}</div>
+        <div class="f"><b>Tipo doc. ident.</b> ${esc(f["decTipoDoc"] ?? "")}</div>
+        <div class="f"><b>N.º do documento</b> ${esc(f["decNumDoc"] ?? "")}</div>
+        <div class="f"><b>Telefone</b> ${esc(f["decTlf"] ?? "")}</div>
+        <div class="f"><b>Telemóvel</b> ${esc(f["decTlm"] ?? "")}</div>
+        <div class="f"><b>Correio eletrónico</b> ${esc(f["decEmail"] ?? "")}</div>
+      </div>
+
+      <div style="margin-top:3mm">Declara que no local a seguir indicado:</div>
+      <div class="grid">
+        <div class="f"><b>Morada</b> ${esc(f["localMorada"] ?? "")}</div>
+        <div class="f"><b>Localidade</b> ${esc(f["localLocalidade"] ?? "")}</div>
+        <div class="f"><b>Código postal</b> ${esc(f["localCp"] ?? "")}</div>
+      </div>
+      <ul class="chk">
+        <li>${box(f["sirene"])} Encontra-se instalado um alarme com sirene audível do exterior</li>
+        <li>${box(f["panico"])} Encontra-se instalado um botão de pânico</li>
+      </ul>
+      <div class="grid">
+        <div class="f"><b>Marca</b> ${esc(f["marca"] ?? "")}</div>
+        <div class="f"><b>Modelo</b> ${esc(f["modelo"] ?? "")}</div>
+        <div class="f"><b>Alarme instalado por</b> ${esc(f["instaladoPor"] ?? ctx.empresa?.nome ?? "")}</div>
+        <div class="f"><b>Certificado de conformidade</b> ${esc(ctx.instalacao?.num_registo ?? "")}</div>
+      </div>
+      <div style="margin-top:2mm">${box(f["juntaDeclaracao"])} Junta cópia da declaração de instalação, garantindo a sua
+      conformidade com as normas técnicas aplicáveis.</div>
+
+      <h2>2. Reposição do alarme</h2>
+      <div class="muted">Em caso de ocorrência com o alarme instalado, deve ser contactado o proprietário
+      ou um dos responsáveis abaixo indicados.</div>
+      ${contacto("1")}
+      ${f["contacto2Nome"] ? contacto("2") : ""}
+      ${f["observacoes"] ? `<h2>Observações</h2><div>${esc(f["observacoes"])}</div>` : ""}
+      ${assinaturas(ctx, "O instalador", "O proprietário / utilizador")}`;
+  }
+
   return `<style>${CSS}</style><div class="doc">${body}${rodape(ctx)}</div>`;
 }
 
