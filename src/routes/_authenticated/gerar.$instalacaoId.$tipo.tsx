@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,14 @@ import {
 } from "@/lib/data";
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
 import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
-import { DOC_LABEL, type DocTipo } from "@/lib/model";
+import { AUTORIDADES, DOC_LABEL, type DocTipo } from "@/lib/model";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo")({
   head: () => ({
@@ -56,6 +63,40 @@ const CAMPOS: Record<DocTipo, [string, string, "input" | "area" | "date" | "time
   auto: [
     ["retencao", "Retenção de imagens (dias)", "input"],
     ["testes", "Testes efetuados", "area"],
+    ["observacoes", "Observações", "area"],
+  ],
+  comunicacao: [
+    ["data", "Data", "date"],
+    ["subunidade", "Subunidade (esquadra / posto)", "input"],
+    ["decNome", "Nome do declarante", "input"],
+    ["decMorada", "Morada do declarante", "input"],
+    ["decLocalidade", "Localidade do declarante", "input"],
+    ["decCp", "Código postal do declarante", "input"],
+    ["decTipoDoc", "Tipo de doc. identificação", "input"],
+    ["decNumDoc", "N.º do documento", "input"],
+    ["decTlf", "Telefone", "input"],
+    ["decTlm", "Telemóvel", "input"],
+    ["decEmail", "Correio eletrónico", "input"],
+    ["localMorada", "Morada do local do alarme", "input"],
+    ["localLocalidade", "Localidade do local", "input"],
+    ["localCp", "Código postal do local", "input"],
+    ["marca", "Marca do alarme", "input"],
+    ["modelo", "Modelo do alarme", "input"],
+    ["instaladoPor", "Alarme instalado por", "input"],
+    ["contacto1Nome", "Reposição — nome do contacto 1", "input"],
+    ["contacto1Morada", "Reposição — morada do contacto 1", "input"],
+    ["contacto1Localidade", "Reposição — localidade do contacto 1", "input"],
+    ["contacto1Cp", "Reposição — código postal do contacto 1", "input"],
+    ["contacto1Doc", "Reposição — tipo e n.º doc. do contacto 1", "input"],
+    ["contacto1Tlf", "Reposição — telefone do contacto 1", "input"],
+    ["contacto1Tlm", "Reposição — telemóvel do contacto 1", "input"],
+    ["contacto2Nome", "Reposição — nome do contacto 2", "input"],
+    ["contacto2Morada", "Reposição — morada do contacto 2", "input"],
+    ["contacto2Localidade", "Reposição — localidade do contacto 2", "input"],
+    ["contacto2Cp", "Reposição — código postal do contacto 2", "input"],
+    ["contacto2Doc", "Reposição — tipo e n.º doc. do contacto 2", "input"],
+    ["contacto2Tlf", "Reposição — telefone do contacto 2", "input"],
+    ["contacto2Tlm", "Reposição — telemóvel do contacto 2", "input"],
     ["observacoes", "Observações", "area"],
   ],
 };
@@ -149,6 +190,40 @@ function Gerar() {
     queryKey: ["intervencoes", instalacaoId],
     queryFn: () => fetchIntervencoes(instalacaoId),
   });
+
+  const prefeito = useRef(false);
+  useEffect(() => {
+    if (docTipo !== "comunicacao") return;
+    if (prefeito.current) return;
+    const i = instalacao.data;
+    const c = cliente.data;
+    if (!i || !c) return;
+    prefeito.current = true;
+    const eq = (equipamentos.data ?? [])[0];
+    setForm((f) => ({
+      ...f,
+      subunidade: f["subunidade"] || i.autoridade_subunidade || "",
+      decNome: f["decNome"] || c.nome || "",
+      decMorada: f["decMorada"] || c.morada || "",
+      decLocalidade: f["decLocalidade"] || c.localidade || "",
+      decCp: f["decCp"] || c.cp || "",
+      decNumDoc: f["decNumDoc"] || c.nif || "",
+      decTipoDoc: f["decTipoDoc"] || (c.nif ? "NIF" : ""),
+      decTlf: f["decTlf"] || c.tel || "",
+      decTlm: f["decTlm"] || c.tlm || "",
+      decEmail: f["decEmail"] || c.email || "",
+      localMorada: f["localMorada"] || i.morada || c.morada || "",
+      localLocalidade: f["localLocalidade"] || i.localidade || c.localidade || "",
+      localCp: f["localCp"] || c.cp || "",
+      marca: f["marca"] || eq?.marca || "",
+      instaladoPor: f["instaladoPor"] || i.instalado_por || empresa.data?.nome || "",
+      contacto1Nome: f["contacto1Nome"] || i.responsavel || "",
+      contacto1Tlm: f["contacto1Tlm"] || i.contacto_resp || "",
+      autoridade: f["autoridade"] || i.autoridade || "psp",
+      sirene: f["sirene"] ?? "sim",
+      juntaDeclaracao: f["juntaDeclaracao"] ?? "sim",
+    }));
+  }, [docTipo, instalacao.data, cliente.data, equipamentos.data, empresa.data]);
 
   const pendencias = useMemo(() => {
     const lista: string[] = [];
@@ -301,6 +376,49 @@ function Gerar() {
               ))}
             </CardContent>
           </Card>
+
+          {docTipo === "comunicacao" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Autoridade e características</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="autoridade">Autoridade da zona</Label>
+                  <Select
+                    value={form["autoridade"] ?? "psp"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, autoridade: v }))}
+                  >
+                    <SelectTrigger id="autoridade">
+                      <SelectValue placeholder="Escolhe a autoridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUTORIDADES.map((a) => (
+                        <SelectItem key={a.valor} value={a.valor}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {([
+                  ["sirene", "Alarme com sirene audível do exterior"],
+                  ["panico", "Botão de pânico"],
+                  ["juntaDeclaracao", "Junta cópia da declaração de instalação"],
+                ] as [string, string][]).map(([campo, label]) => (
+                  <label key={campo} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form[campo] === "sim"}
+                      onCheckedChange={(v) =>
+                        setForm((f) => ({ ...f, [campo]: v === true ? "sim" : "" }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {docTipo === "auto" && (
             <Card>

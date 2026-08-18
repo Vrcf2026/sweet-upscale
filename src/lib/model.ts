@@ -44,6 +44,8 @@ export type Instalacao = {
   periodicidade_meses: number | null;
   proxima_manutencao: string | null;
   estado: string;
+  autoridade: string | null;
+  autoridade_subunidade: string | null;
   created_at: string;
 };
 
@@ -83,7 +85,12 @@ export const ESTADOS_INSTALACAO = [
   { valor: "entregue", label: "Entregue ao cliente" },
 ] as const;
 
-export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto";
+export const AUTORIDADES = [
+  { valor: "psp", label: "PSP — Polícia de Segurança Pública" },
+  { valor: "gnr", label: "GNR — Guarda Nacional Republicana" },
+] as const;
+
+export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto" | "comunicacao";
 
 export type Documento = {
   id: string;
@@ -104,6 +111,7 @@ export const DOC_LABEL: Record<DocTipo, string> = {
   livro: "Livro de Registos do Sistema",
   declaracao: "Declaração de Instalação",
   auto: "Auto de Instalação",
+  comunicacao: "Comunicação de Instalação de Alarme",
 };
 
 export const ESTADO_LABEL: Record<Documento["estado"], string> = {

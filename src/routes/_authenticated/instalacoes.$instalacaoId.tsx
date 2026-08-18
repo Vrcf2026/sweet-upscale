@@ -27,7 +27,13 @@ import {
   fetchIntervencoes,
   getUserId,
 } from "@/lib/data";
-import { DOC_LABEL, ESTADOS_INSTALACAO, TIPOS_SISTEMA, type DocTipo } from "@/lib/model";
+import {
+  AUTORIDADES,
+  DOC_LABEL,
+  ESTADOS_INSTALACAO,
+  TIPOS_SISTEMA,
+  type DocTipo,
+} from "@/lib/model";
 import { dataPT } from "@/lib/docs";
 import { extrairTextoPdf, lerExcel } from "@/lib/ficheiros";
 import { estruturarEquipamento } from "@/lib/ia.functions";
@@ -58,6 +64,8 @@ const CAMPOS = [
   ["data_instalacao", "Data de instalação"],
   ["periodicidade_meses", "Periodicidade de manutenção (meses)"],
   ["proxima_manutencao", "Próxima manutenção"],
+  ["autoridade", "Autoridade da zona"],
+  ["autoridade_subunidade", "Subunidade (esquadra / posto)"],
   ["estado", "Estado da instalação"],
 ] as const;
 
@@ -121,6 +129,8 @@ function InstalacaoDetalhe() {
           periodicidade_meses: Number(form["periodicidade_meses"]) || 12,
           proxima_manutencao: form["proxima_manutencao"] || null,
           estado: form["estado"] || "ativa",
+          autoridade: form["autoridade"] ?? null,
+          autoridade_subunidade: form["autoridade_subunidade"] ?? null,
         })
         .eq("id", instalacaoId);
       if (error) throw new Error(error.message);
@@ -131,6 +141,8 @@ function InstalacaoDetalhe() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const temAlarme = (instalacao.data?.tipo_sistema ?? "").toLowerCase().includes("alarme");
 
   const bloqueios: string[] = [];
   if ((documentos.data ?? []).length > 0)
@@ -181,7 +193,7 @@ function InstalacaoDetalhe() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {TIPOS.map((tipo) => (
+        {(temAlarme ? [...TIPOS, "comunicacao" as DocTipo] : TIPOS).map((tipo) => (
           <Button key={tipo} asChild variant="secondary" size="sm">
             <Link to="/gerar/$instalacaoId/$tipo" params={{ instalacaoId, tipo }}>
               <FileText className="h-4 w-4" /> {DOC_LABEL[tipo]}
@@ -215,6 +227,22 @@ function InstalacaoDetalhe() {
                         {TIPOS_SISTEMA.map((t) => (
                           <SelectItem key={t} value={t}>
                             {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : campo === "autoridade" ? (
+                    <Select
+                      value={form[campo] ?? ""}
+                      onValueChange={(v) => setForm((f) => ({ ...f, autoridade: v }))}
+                    >
+                      <SelectTrigger id={campo}>
+                        <SelectValue placeholder="Escolhe a autoridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AUTORIDADES.map((a) => (
+                          <SelectItem key={a.valor} value={a.valor}>
+                            {a.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
