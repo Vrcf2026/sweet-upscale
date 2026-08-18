@@ -13,13 +13,24 @@ export type UtilizadorAdmin = {
 
 async function garantirSuperadmin(context: { supabase: unknown; userId: string }) {
   const supabase = context.supabase as {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+    from: (t: string) => {
+      select: (c: string) => {
+        eq: (
+          c: string,
+          v: string,
+        ) => {
+          eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown }> };
+        };
+      };
+    };
   };
-  const { data } = await supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "superadmin",
-  });
-  if (data !== true) throw new Error("Apenas o superadmin pode gerir utilizadores");
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId)
+    .eq("role", "superadmin")
+    .maybeSingle();
+  if (!data) throw new Error("Apenas o superadmin pode gerir utilizadores");
 }
 
 export const listarUtilizadores = createServerFn({ method: "GET" })
