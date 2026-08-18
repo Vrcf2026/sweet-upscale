@@ -70,6 +70,27 @@ function DocumentoPage() {
           >
             <Download className="h-4 w-4" /> PDF
           </Button>
+          <ApagarDialog
+            titulo="Apagar documento"
+            descricao="O documento é removido do arquivo de forma definitiva."
+            bloqueios={
+              data.estado === "entregue"
+                ? ["O documento já foi entregue ao cliente e não pode ser apagado."]
+                : []
+            }
+            nomeBackup={`backup-documento-${data.numero ?? documentoId}.json`}
+            recolherBackup={async () => ({ documento: data })}
+            aoApagar={async () => {
+              const { error } = await supabase
+                .from("documentos")
+                .delete()
+                .eq("id", documentoId);
+              if (error) throw new Error(error.message);
+              toast.success("Documento apagado");
+              queryClient.invalidateQueries({ queryKey: ["documentos"] });
+              window.history.back();
+            }}
+          />
         </div>
       </div>
 
