@@ -184,6 +184,39 @@ function Gerar() {
     queryFn: () => fetchIntervencoes(instalacaoId),
   });
 
+  const prefeito = useRef(false);
+  useEffect(() => {
+    if (docTipo !== "comunicacao") return;
+    if (prefeito.current) return;
+    const i = instalacao.data;
+    const c = cliente.data;
+    if (!i || !c) return;
+    prefeito.current = true;
+    const eq = (equipamentos.data ?? [])[0];
+    setForm((f) => ({
+      ...f,
+      subunidade: f["subunidade"] || i.autoridade_subunidade || "",
+      decNome: f["decNome"] || c.nome || "",
+      decMorada: f["decMorada"] || c.morada || "",
+      decLocalidade: f["decLocalidade"] || c.localidade || "",
+      decCp: f["decCp"] || c.cp || "",
+      decNumDoc: f["decNumDoc"] || c.nif || "",
+      decTipoDoc: f["decTipoDoc"] || (c.nif ? "NIF" : ""),
+      decTlf: f["decTlf"] || c.tel || "",
+      decTlm: f["decTlm"] || c.tlm || "",
+      decEmail: f["decEmail"] || c.email || "",
+      localMorada: f["localMorada"] || i.morada || c.morada || "",
+      localLocalidade: f["localLocalidade"] || i.localidade || c.localidade || "",
+      localCp: f["localCp"] || c.cp || "",
+      marca: f["marca"] || eq?.marca || "",
+      instaladoPor: f["instaladoPor"] || i.instalado_por || empresa.data?.nome || "",
+      contacto1Nome: f["contacto1Nome"] || i.responsavel || "",
+      contacto1Tlm: f["contacto1Tlm"] || i.contacto_resp || "",
+      sirene: f["sirene"] ?? "sim",
+      juntaDeclaracao: f["juntaDeclaracao"] ?? "sim",
+    }));
+  }, [docTipo, instalacao.data, cliente.data, equipamentos.data, empresa.data]);
+
   const pendencias = useMemo(() => {
     const lista: string[] = [];
     checklist.forEach((c) => {
