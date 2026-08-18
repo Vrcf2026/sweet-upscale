@@ -119,9 +119,19 @@ function Painel() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Stat icon={Users} label="Clientes" valor={clientes.data?.length ?? 0} />
-            <Stat icon={Building2} label="Instalações" valor={instalacoes.data?.length ?? 0} />
-            <Stat icon={FileText} label="Documentos" valor={documentos.data?.length ?? 0} />
+            <Stat icon={Users} label="Clientes" valor={clientes.data?.length ?? 0} to="/clientes" />
+            <Stat
+              icon={Building2}
+              label="Instalações"
+              valor={instalacoes.data?.length ?? 0}
+              to="/instalacoes"
+            />
+            <Stat
+              icon={FileText}
+              label="Documentos"
+              valor={documentos.data?.length ?? 0}
+              to="/documentos"
+            />
           </div>
 
           {manutencoes.length > 0 && (
@@ -207,20 +217,24 @@ function Stat({
   icon: Icon,
   label,
   valor,
+  to,
 }: {
   icon: typeof Users;
   label: string;
   valor: number;
+  to: "/clientes" | "/instalacoes" | "/documentos";
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-6">
-        <Icon className="h-8 w-8 text-accent" />
-        <div>
-          <div className="text-2xl font-bold">{valor}</div>
-          <div className="text-sm text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
+    <Link to={to} className="block">
+      <Card className="transition-colors hover:border-accent">
+        <CardContent className="flex items-center gap-4 p-6">
+          <Icon className="h-8 w-8 text-accent" />
+          <div>
+            <div className="text-2xl font-bold">{valor}</div>
+            <div className="text-sm text-muted-foreground">{label}</div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
