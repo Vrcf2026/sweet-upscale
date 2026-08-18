@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MoradaLink } from "@/components/MoradaLink";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCliente,
@@ -17,7 +25,7 @@ import {
   fetchIntervencoes,
   getUserId,
 } from "@/lib/data";
-import { DOC_LABEL, type DocTipo } from "@/lib/model";
+import { DOC_LABEL, TIPOS_SISTEMA, type DocTipo } from "@/lib/model";
 import { dataPT } from "@/lib/docs";
 import { extrairTextoPdf, lerExcel } from "@/lib/ficheiros";
 import { estruturarEquipamento } from "@/lib/ia.functions";
@@ -156,18 +164,39 @@ function InstalacaoDetalhe() {
               {CAMPOS.map(([campo, label]) => (
                 <div key={campo} className="space-y-2">
                   <Label htmlFor={campo}>{label}</Label>
-                  <Input
-                    id={campo}
-                    type={
-                      campo === "data_instalacao" || campo === "proxima_manutencao"
-                        ? "date"
-                        : campo === "periodicidade_meses"
-                          ? "number"
-                          : "text"
-                    }
-                    value={form[campo] ?? ""}
-                    onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                  />
+                  {campo === "tipo_sistema" ? (
+                    <Select
+                      value={form[campo] ?? ""}
+                      onValueChange={(v) => setForm((f) => ({ ...f, tipo_sistema: v }))}
+                    >
+                      <SelectTrigger id={campo}>
+                        <SelectValue placeholder="Escolhe o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_SISTEMA.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id={campo}
+                      type={
+                        campo === "data_instalacao" || campo === "proxima_manutencao"
+                          ? "date"
+                          : campo === "periodicidade_meses"
+                            ? "number"
+                            : "text"
+                      }
+                      value={form[campo] ?? ""}
+                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
+                    />
+                  )}
+                  {campo === "morada" && (
+                    <MoradaLink partes={[form["morada"], form["localidade"]]} />
+                  )}
                 </div>
               ))}
               <div className="sm:col-span-2">
