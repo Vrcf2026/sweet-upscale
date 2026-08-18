@@ -401,11 +401,11 @@ function Gerar() {
                     </SelectContent>
                   </Select>
                 </div>
-                {[
+                {([
                   ["sirene", "Alarme com sirene audível do exterior"],
                   ["panico", "Botão de pânico"],
                   ["juntaDeclaracao", "Junta cópia da declaração de instalação"],
-                ].map(([campo, label]) => (
+                ] as [string, string][]).map(([campo, label]) => (
                   <label key={campo} className="flex items-center gap-2 text-sm">
                     <Checkbox
                       checked={form[campo] === "sim"}
