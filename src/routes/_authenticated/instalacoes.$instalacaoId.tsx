@@ -231,6 +231,22 @@ function InstalacaoDetalhe() {
                         ))}
                       </SelectContent>
                     </Select>
+                  ) : campo === "autoridade" ? (
+                    <Select
+                      value={form[campo] ?? ""}
+                      onValueChange={(v) => setForm((f) => ({ ...f, autoridade: v }))}
+                    >
+                      <SelectTrigger id={campo}>
+                        <SelectValue placeholder="Escolhe a autoridade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AUTORIDADES.map((a) => (
+                          <SelectItem key={a.valor} value={a.valor}>
+                            {a.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : campo === "estado" ? (
                     <Select
                       value={form[campo] || "ativa"}
