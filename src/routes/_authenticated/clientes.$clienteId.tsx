@@ -15,8 +15,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { MoradaLink } from "@/components/MoradaLink";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCliente, fetchInstalacoes, getUserId } from "@/lib/data";
+import { TIPOS_SISTEMA } from "@/lib/model";
 
 export const Route = createFileRoute("/_authenticated/clientes/$clienteId")({
   head: () => ({
@@ -161,6 +170,9 @@ function ClienteDetalhe() {
                 value={form[campo] ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
               />
+              {campo === "morada" && (
+                <MoradaLink partes={[form["morada"], form["cp"], form["localidade"]]} />
+              )}
             </div>
           ))}
           <div className="sm:col-span-2">
@@ -188,12 +200,30 @@ function ClienteDetalhe() {
                 {CAMPOS_INST.map(([campo, label]) => (
                   <div key={campo} className="space-y-2">
                     <Label htmlFor={`i-${campo}`}>{label}</Label>
-                    <Input
-                      id={`i-${campo}`}
-                      type={campo === "data_instalacao" ? "date" : "text"}
-                      value={nova[campo] ?? ""}
-                      onChange={(e) => setNova((f) => ({ ...f, [campo]: e.target.value }))}
-                    />
+                    {campo === "tipo_sistema" ? (
+                      <Select
+                        value={nova[campo] ?? ""}
+                        onValueChange={(v) => setNova((f) => ({ ...f, tipo_sistema: v }))}
+                      >
+                        <SelectTrigger id={`i-${campo}`}>
+                          <SelectValue placeholder="Escolhe o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIPOS_SISTEMA.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id={`i-${campo}`}
+                        type={campo === "data_instalacao" ? "date" : "text"}
+                        value={nova[campo] ?? ""}
+                        onChange={(e) => setNova((f) => ({ ...f, [campo]: e.target.value }))}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
