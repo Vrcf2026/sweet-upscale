@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SignaturePad } from "@/components/SignaturePad";
+import { comprimirImagem } from "@/lib/ficheiros";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCliente,
@@ -20,6 +21,7 @@ import {
   proximoNumero,
 } from "@/lib/data";
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
+import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
 import { DOC_LABEL, type DocTipo } from "@/lib/model";
 
 export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo")({
@@ -71,10 +73,62 @@ function Gerar() {
     data: new Date().toISOString().slice(0, 10),
   });
   const [assinatura, setAssinatura] = useState<string | null>(null);
-  const [checklist, setChecklist] = useState(
-    CHECKLIST_AUTO.map((label) => ({ label, ok: true })),
-  );
+  const [foto, setFoto] = useState<string | null>(null);
+  const [aComprimirFoto, setAComprimirFoto] = useState(false);
+  const [avaliacaoFoto, setAvaliacaoFoto] = useState<string | null>(null);
+  const [aAvaliarFoto, setAAvaliarFoto] = useState(false);
+  const [certificacoes, setCertificacoes] = useState<
+    { equip: string; situacao: string; nota: string }[]
+  >([]);
+  const [aVerificarCert, setAVerificarCert] = useState(false);
+  const [checklist, setChecklist] = useState(CHECKLIST_AUTO.map((label) => ({ label, ok: true })));
   const [aGuardar, setAGuardar] = useState(false);
+
+  async function aoEscolherFoto(file: File) {
+    try {
+      setAComprimirFoto(true);
+      const dataUrl = await comprimirImagem(file);
+      setFoto(dataUrl);
+      setAvaliacaoFoto(null);
+      toast.success("Foto pronta");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAComprimirFoto(false);
+    }
+  }
+
+  async function pedirAvaliacaoFoto() {
+    if (!foto) return;
+    try {
+      setAAvaliarFoto(true);
+      const { texto } = await avaliarFoto({ data: { fotoDataUrl: foto } });
+      setAvaliacaoFoto(texto);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAAvaliarFoto(false);
+    }
+  }
+
+  async function pedirVerificacaoCertificacoes() {
+    const lista = equipamentos.data ?? [];
+    if (!lista.length) {
+      toast.error("Sem equipamento para verificar");
+      return;
+    }
+    try {
+      setAVerificarCert(true);
+      const res = await verificarCertificacoes({
+        data: { equipamentos: lista.map((e) => ({ equip: e.equip, marca: e.marca ?? "" })) },
+      });
+      setCertificacoes(res);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAVerificarCert(false);
+    }
+  }
 
   const empresa = useQuery({ queryKey: ["empresa"], queryFn: fetchEmpresa });
   const instalacao = useQuery({
@@ -95,6 +149,25 @@ function Gerar() {
     queryFn: () => fetchIntervencoes(instalacaoId),
   });
 
+  const pendencias = useMemo(() => {
+    const lista: string[] = [];
+    checklist.forEach((c) => {
+      if (!c.ok) lista.push(`Item da checklist por confirmar: ${c.label}`);
+    });
+    certificacoes.forEach((c) => {
+      if (c.situacao !== "confirmado") {
+        lista.push(`Certificação não confirmada — ${c.equip}: ${c.nota}`);
+      }
+    });
+    if (foto && !avaliacaoFoto) {
+      lista.push("Foto carregada mas ainda sem avaliação da IA — considera pedir antes de gerar");
+    }
+    if (avaliacaoFoto) {
+      lista.push("Rever a avaliação da IA sobre a foto do local antes de entregar");
+    }
+    return lista;
+  }, [checklist, certificacoes, foto, avaliacaoFoto]);
+
   const html = useMemo(
     () =>
       buildDocumentHtml({
@@ -108,6 +181,10 @@ function Gerar() {
         form,
         checklist,
         assinatura,
+        foto,
+        avaliacaoFoto,
+        certificacoes,
+        pendencias,
       }),
     [
       docTipo,
@@ -119,6 +196,10 @@ function Gerar() {
       form,
       checklist,
       assinatura,
+      foto,
+      avaliacaoFoto,
+      certificacoes,
+      pendencias,
     ],
   );
 
@@ -138,6 +219,10 @@ function Gerar() {
         form,
         checklist,
         assinatura,
+        foto,
+        avaliacaoFoto,
+        certificacoes,
+        pendencias,
       });
       const { data, error } = await supabase
         .from("documentos")
@@ -221,6 +306,109 @@ function Gerar() {
             </Card>
           )}
 
+          {docTipo === "auto" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Fotografia do local / sistema</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  disabled={aComprimirFoto}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void aoEscolherFoto(f);
+                    e.target.value = "";
+                  }}
+                />
+                {foto && (
+                  <div className="space-y-2">
+                    <img
+                      src={foto}
+                      alt="Pré-visualização da foto do local"
+                      className="max-h-48 rounded-md border border-border"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={aAvaliarFoto}
+                        onClick={pedirAvaliacaoFoto}
+                      >
+                        {aAvaliarFoto ? "A avaliar…" : "Pedir avaliação à IA"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setFoto(null);
+                          setAvaliacaoFoto(null);
+                        }}
+                      >
+                        Remover foto
+                      </Button>
+                    </div>
+                    {avaliacaoFoto && (
+                      <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                        {avaliacaoFoto}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {docTipo === "auto" && (equipamentos.data?.length ?? 0) > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Certificações do equipamento</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  A IA verifica com base no seu conhecimento geral (sem acesso à internet em tempo
+                  real) — confirma sempre com a ficha técnica do fabricante.
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={aVerificarCert}
+                  onClick={pedirVerificacaoCertificacoes}
+                >
+                  {aVerificarCert ? "A verificar…" : "Verificar certificações (IA)"}
+                </Button>
+                {certificacoes.length > 0 && (
+                  <ul className="space-y-1 text-sm">
+                    {certificacoes.map((c) => (
+                      <li
+                        key={c.equip}
+                        className={c.situacao === "confirmado" ? "text-green-700" : "text-red-700"}
+                      >
+                        {c.situacao === "confirmado" ? "✔" : "✘"} {c.equip} — {c.nota}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {docTipo === "auto" && pendencias.length > 0 && (
+            <Card className="border-amber-300 bg-amber-50">
+              <CardHeader>
+                <CardTitle className="text-amber-900">⚠ Por confirmar antes de entregar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
+                  {pendencias.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Identificação de quem assina</CardTitle>
@@ -239,7 +427,6 @@ function Gerar() {
               <SignaturePad value={assinatura} onChange={setAssinatura} />
             </CardContent>
           </Card>
-
 
           <Button onClick={guardar} disabled={aGuardar} className="w-full">
             Gerar e guardar documento
