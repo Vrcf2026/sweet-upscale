@@ -23,7 +23,14 @@ import {
 } from "@/lib/data";
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
 import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
-import { DOC_LABEL, type DocTipo } from "@/lib/model";
+import { AUTORIDADES, DOC_LABEL, type DocTipo } from "@/lib/model";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo")({
   head: () => ({
@@ -212,6 +219,7 @@ function Gerar() {
       instaladoPor: f["instaladoPor"] || i.instalado_por || empresa.data?.nome || "",
       contacto1Nome: f["contacto1Nome"] || i.responsavel || "",
       contacto1Tlm: f["contacto1Tlm"] || i.contacto_resp || "",
+      autoridade: f["autoridade"] || i.autoridade || "psp",
       sirene: f["sirene"] ?? "sim",
       juntaDeclaracao: f["juntaDeclaracao"] ?? "sim",
     }));
@@ -368,6 +376,49 @@ function Gerar() {
               ))}
             </CardContent>
           </Card>
+
+          {docTipo === "comunicacao" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Autoridade e características</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="autoridade">Autoridade da zona</Label>
+                  <Select
+                    value={form["autoridade"] ?? "psp"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, autoridade: v }))}
+                  >
+                    <SelectTrigger id="autoridade">
+                      <SelectValue placeholder="Escolhe a autoridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUTORIDADES.map((a) => (
+                        <SelectItem key={a.valor} value={a.valor}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {[
+                  ["sirene", "Alarme com sirene audível do exterior"],
+                  ["panico", "Botão de pânico"],
+                  ["juntaDeclaracao", "Junta cópia da declaração de instalação"],
+                ].map(([campo, label]) => (
+                  <label key={campo} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={form[campo] === "sim"}
+                      onCheckedChange={(v) =>
+                        setForm((f) => ({ ...f, [campo]: v === true ? "sim" : "" }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {docTipo === "auto" && (
             <Card>
