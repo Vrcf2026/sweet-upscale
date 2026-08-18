@@ -111,6 +111,7 @@ export const DOC_LABEL: Record<DocTipo, string> = {
   livro: "Livro de Registos do Sistema",
   declaracao: "Declaração de Instalação",
   auto: "Auto de Instalação",
+  comunicacao: "Comunicação de Instalação de Alarme",
 };
 
 export const ESTADO_LABEL: Record<Documento["estado"], string> = {
