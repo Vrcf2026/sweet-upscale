@@ -85,7 +85,12 @@ export const ESTADOS_INSTALACAO = [
   { valor: "entregue", label: "Entregue ao cliente" },
 ] as const;
 
-export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto";
+export const AUTORIDADES = [
+  { valor: "psp", label: "PSP — Polícia de Segurança Pública" },
+  { valor: "gnr", label: "GNR — Guarda Nacional Republicana" },
+] as const;
+
+export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto" | "comunicacao";
 
 export type Documento = {
   id: string;
