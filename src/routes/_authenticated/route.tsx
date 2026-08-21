@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoDialog } from "@/components/InfoDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/hooks/useRole";
 
@@ -76,6 +77,13 @@ function Layout() {
             )}
           </nav>
 
+          <InfoDialog
+            trigger={
+              <Button variant="ghost" size="sm" className="hover:bg-sidebar-accent">
+                Info
+              </Button>
+            }
+          />
           <Button variant="ghost" size="sm" onClick={sair} className="hover:bg-sidebar-accent">
             <LogOut className="h-4 w-4" /> Sair
           </Button>
