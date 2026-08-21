@@ -53,6 +53,39 @@ export type Database = {
           },
         ]
       }
+      auditoria: {
+        Row: {
+          accao: string
+          created_at: string
+          descricao: string
+          detalhe: Json
+          entidade: string
+          entidade_id: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          accao: string
+          created_at?: string
+          descricao?: string
+          detalhe?: Json
+          entidade: string
+          entidade_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          accao?: string
+          created_at?: string
+          descricao?: string
+          detalhe?: Json
+          entidade?: string
+          entidade_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           contacto: string | null
@@ -122,6 +155,8 @@ export type Database = {
           created_at: string
           dados: Json
           estado: string
+          ficheiro_path: string | null
+          hash: string | null
           html: string
           id: string
           instalacao_id: string | null
@@ -135,6 +170,8 @@ export type Database = {
           created_at?: string
           dados?: Json
           estado?: string
+          ficheiro_path?: string | null
+          hash?: string | null
           html?: string
           id?: string
           instalacao_id?: string | null
@@ -148,6 +185,8 @@ export type Database = {
           created_at?: string
           dados?: Json
           estado?: string
+          ficheiro_path?: string | null
+          hash?: string | null
           html?: string
           id?: string
           instalacao_id?: string | null
