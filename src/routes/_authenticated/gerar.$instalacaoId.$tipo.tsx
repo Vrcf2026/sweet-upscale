@@ -24,6 +24,10 @@ import {
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
 import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
 import { AUTORIDADES, DOC_LABEL, type DocTipo } from "@/lib/model";
+import { CAMPOS_ASSINANTE, CAMPOS_DOC, agrupar } from "@/lib/campos";
+import { arquivarDocumento } from "@/lib/arquivo";
+import { registar } from "@/lib/auditoria";
+
 import {
   Select,
   SelectContent,
