@@ -431,6 +431,31 @@ function Gerar() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="brasao">Brasão oficial da autoridade (opcional)</Label>
+                  <div className="flex items-center gap-3">
+                    {logoAutoridade && (
+                      <img
+                        src={logoAutoridade}
+                        alt="Brasão da autoridade"
+                        className="h-12 w-12 rounded border border-border object-contain"
+                      />
+                    )}
+                    <Input
+                      id="brasao"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void aoEscolherBrasao(file);
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Carrega a imagem do brasão oficial (PSP ou GNR) para aparecer no cabeçalho. Fica
+                    guardada neste dispositivo e é reutilizada nos próximos formulários.
+                  </p>
+                </div>
                 {([
                   ["sirene", "Alarme com sirene audível do exterior"],
                   ["panico", "Botão de pânico"],
