@@ -319,12 +319,13 @@ function Gerar() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          {agrupar(CAMPOS_DOC[docTipo] ?? []).map(([grupo, campos]) => (
+          {agrupar(CAMPOS_DOC[docTipo] ?? []).map(({ grupo, campos }) => (
             <Card key={grupo}>
               <CardHeader>
                 <CardTitle>{grupo}</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 sm:grid-cols-2">
+
                 {campos.map((c) => (
                   <div
                     key={c.nome}
