@@ -286,10 +286,24 @@ function Gerar() {
         .select("id")
         .single();
       if (error) throw new Error(error.message);
+      await registar(
+        "documento",
+        "criou",
+        data.id,
+        `${DOC_LABEL[docTipo]} ${numero} ${comoRascunho ? "guardado como rascunho" : "gerado"}`,
+      );
+      if (!comoRascunho && assinatura) {
+        try {
+          await arquivarDocumento({ id: data.id, numero, html: finalHtml });
+        } catch {
+          /* o arquivo é complementar; o documento já ficou guardado */
+        }
+      }
       toast.success(
         comoRascunho ? `Rascunho ${numero} guardado` : `Documento ${numero} criado`,
       );
       navigate({ to: "/documentos/$documentoId", params: { documentoId: data.id } });
+
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
