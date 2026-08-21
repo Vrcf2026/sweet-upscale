@@ -561,11 +561,35 @@ function Gerar() {
           </Card>
         </div>
 
-
-        <div className="overflow-x-auto rounded-md bg-white p-4">
+        <div className="hidden overflow-x-auto rounded-md bg-white p-4 lg:block">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </div>
+
+        <details className="rounded-md border border-border bg-card p-3 lg:hidden">
+          <summary className="cursor-pointer text-sm font-medium">
+            Pré-visualizar documento
+          </summary>
+          <div className="mt-3 overflow-x-auto rounded-md bg-white p-2">
+            <div dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        </details>
+      </div>
+
+      {/* barra de ações fixa — pensada para uso no terreno, no telemóvel */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-md sm:border">
+        <Button
+          variant="secondary"
+          className="flex-1"
+          disabled={aGuardar}
+          onClick={() => guardar(true)}
+        >
+          <Save className="h-4 w-4" /> Rascunho
+        </Button>
+        <Button className="flex-1" onClick={() => guardar(false)} disabled={aGuardar}>
+          Gerar e guardar
+        </Button>
       </div>
     </div>
+
   );
 }
