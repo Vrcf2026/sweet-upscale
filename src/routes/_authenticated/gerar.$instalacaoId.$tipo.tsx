@@ -319,33 +319,39 @@ function Gerar() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preenchimento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(CAMPOS[docTipo] ?? []).map(([campo, label, kind]) => (
-                <div key={campo} className="space-y-2">
-                  <Label htmlFor={campo}>{label}</Label>
-                  {kind === "area" ? (
-                    <Textarea
-                      id={campo}
-                      rows={3}
-                      value={form[campo] ?? ""}
-                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                    />
-                  ) : (
-                    <Input
-                      id={campo}
-                      type={kind === "date" ? "date" : kind === "time" ? "time" : "text"}
-                      value={form[campo] ?? ""}
-                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                    />
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {agrupar(CAMPOS_DOC[docTipo] ?? []).map(([grupo, campos]) => (
+            <Card key={grupo}>
+              <CardHeader>
+                <CardTitle>{grupo}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+                {campos.map((c) => (
+                  <div
+                    key={c.nome}
+                    className={`space-y-2 ${c.tipo === "area" ? "sm:col-span-2" : ""}`}
+                  >
+                    <Label htmlFor={c.nome}>{c.label}</Label>
+                    {c.tipo === "area" ? (
+                      <Textarea
+                        id={c.nome}
+                        rows={3}
+                        value={form[c.nome] ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
+                      />
+                    ) : (
+                      <Input
+                        id={c.nome}
+                        type={c.tipo === "date" ? "date" : c.tipo === "time" ? "time" : "text"}
+                        value={form[c.nome] ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+
 
           {docTipo === "comunicacao" && (
             <Card>
