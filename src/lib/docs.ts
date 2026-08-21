@@ -60,7 +60,58 @@ const CSS = `
   .doc .nota-ia b { color:#1d4d8f; }
   .doc .cert-ok { color:#1a7a3c; }
   .doc .cert-alerta { color:#a12f2f; }
+
+  /* ---- Formulário oficial de comunicação de alarme (PSP / GNR) ---- */
+  .doc.oficial { font-family:"Arial", Helvetica, sans-serif; }
+  .oficial .of-top { display:flex; align-items:center; gap:6mm; border-bottom:3px solid var(--of); padding-bottom:3mm; }
+  .oficial .of-brasao { width:20mm; height:20mm; object-fit:contain; }
+  .oficial .of-min { font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; color:#333; }
+  .oficial .of-forca { font-size:15px; font-weight:700; color:var(--of); text-transform:uppercase; letter-spacing:.6px; }
+  .oficial .of-sub { font-size:9.5px; color:#555; }
+  .oficial .of-titulo { margin:4mm 0 1mm; background:var(--of); color:#fff; padding:2.2mm 3mm; font-size:12.5px;
+    font-weight:700; text-transform:uppercase; letter-spacing:.6px; text-align:center; border-radius:1mm; }
+  .oficial .of-lei { text-align:center; font-size:9px; color:#444; margin-bottom:3mm; }
+  .oficial .of-sec { background:color-mix(in srgb, var(--of) 12%, #fff); border-left:3mm solid var(--of);
+    padding:1.6mm 3mm; font-size:10.5px; font-weight:700; text-transform:uppercase; margin:4mm 0 0; color:#111; }
+  .oficial .of-box { border:1px solid var(--of); border-top:none; padding:2.5mm 3mm; }
+  .oficial .of-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5mm 5mm; }
+  .oficial .of-grid.tres { grid-template-columns:2fr 1fr 1fr; }
+  .oficial .of-c { grid-column:1 / -1; }
+  .oficial .of-lbl { display:block; font-size:8px; text-transform:uppercase; letter-spacing:.4px; color:#666; }
+  .oficial .of-val { display:block; min-height:5mm; border-bottom:1px solid #b9b9b9; font-size:11px; padding-top:.6mm; }
+  .oficial .of-chk { display:flex; gap:2mm; align-items:flex-start; font-size:10.5px; margin:1.5mm 0; }
+  .oficial .of-sq { display:inline-block; width:4mm; height:4mm; border:1px solid var(--of); text-align:center;
+    line-height:3.6mm; font-size:9px; font-weight:700; color:var(--of); flex:none; }
+  .oficial .of-reserva { border:1px dashed #888; background:#f6f6f6; padding:2.5mm 3mm; }
+  .oficial .of-nota { font-size:9px; color:#555; margin-top:1.5mm; }
+  .oficial .of-sign { margin-top:7mm; display:flex; gap:10mm; }
+  .oficial .of-sign div { flex:1; text-align:center; font-size:9.5px; }
+  .oficial .of-sign .of-linha { border-top:1px solid #111; margin-top:12mm; padding-top:1.2mm; }
+  .oficial .of-sign img { max-height:16mm; display:block; margin:0 auto -1mm; }
 `;
+
+const AUT_TEMA: Record<string, { cor: string; ministerio: string; forca: string; sigla: string }> = {
+  psp: {
+    cor: "#123a72",
+    ministerio: "Ministério da Administração Interna",
+    forca: "Polícia de Segurança Pública",
+    sigla: "PSP",
+  },
+  gnr: {
+    cor: "#14532d",
+    ministerio: "Ministério da Administração Interna",
+    forca: "Guarda Nacional Republicana",
+    sigla: "GNR",
+  },
+};
+
+function brasaoPlaceholder(cor: string, sigla: string) {
+  return `<svg class="of-brasao" viewBox="0 0 100 100" role="img" aria-label="Brasão ${sigla}">
+    <path d="M50 4 92 18v34c0 24-18 38-42 44C26 90 8 76 8 52V18z" fill="#fff" stroke="${cor}" stroke-width="5"/>
+    <path d="M50 16 80 26v26c0 17-13 27-30 32-17-5-30-15-30-32V26z" fill="${cor}" opacity=".12"/>
+    <text x="50" y="60" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="${cor}">${sigla}</text>
+  </svg>`;
+}
 
 function header(ctx: DocContext, titulo: string) {
   const e = ctx.empresa;
