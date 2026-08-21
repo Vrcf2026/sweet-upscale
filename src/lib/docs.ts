@@ -300,80 +300,111 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
+  let extraClass = "";
+  let extraStyle = "";
+
   if (ctx.tipo === "comunicacao") {
     const f = ctx.form;
-    const gnr = (f["autoridade"] ?? "psp") === "gnr";
-    const autoridade = gnr
-      ? "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Guarda Nacional Republicana"
-      : "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Polícia de Segurança Pública";
-    const box = (v?: string) => (v === "sim" ? "&#9745;" : "&#9744;");
-    const contacto = (n: string) => `<div class="grid">
-      <div class="f"><b>Nome</b> ${esc(f[`contacto${n}Nome`] ?? "")}</div>
-      <div class="f"><b>Morada</b> ${esc(f[`contacto${n}Morada`] ?? "")}</div>
-      <div class="f"><b>Localidade</b> ${esc(f[`contacto${n}Localidade`] ?? "")}</div>
-      <div class="f"><b>Código postal</b> ${esc(f[`contacto${n}Cp`] ?? "")}</div>
-      <div class="f"><b>Doc. identificação</b> ${esc(f[`contacto${n}Doc`] ?? "")}</div>
-      <div class="f"><b>Telefone / Telemóvel</b> ${esc(f[`contacto${n}Tlf`] ?? "")} ${esc(f[`contacto${n}Tlm`] ?? "")}</div>
-    </div>`;
-    body = `<div class="hdr">
-        <div><div style="font-size:12px;font-weight:700">${autoridade}</div></div>
-        <div style="text-align:right">
-          <h1>Comunicação de Instalação de Alarme</h1>
-          <div class="muted">${dataPT(f["data"] ?? new Date().toISOString())}</div>
+    const chave = (f["autoridade"] ?? "psp") === "gnr" ? "gnr" : "psp";
+    const tema = AUT_TEMA[chave]!;
+    extraClass = " oficial";
+    extraStyle = ` style="--of:${tema.cor}"`;
+
+    const campo = (label: string, valor?: string | null, span = false) =>
+      `<div${span ? ' class="of-c"' : ""}><span class="of-lbl">${esc(label)}</span><span class="of-val">${esc(valor ?? "")}</span></div>`;
+    const cx = (v: string | undefined, label: string) =>
+      `<div class="of-chk"><span class="of-sq">${v === "sim" ? "X" : "&nbsp;"}</span><span>${label}</span></div>`;
+    const contacto = (n: string, titulo: string) => `<div class="of-sec">${esc(titulo)}</div>
+      <div class="of-box"><div class="of-grid">
+        ${campo("Nome", f[`contacto${n}Nome`], true)}
+        ${campo("Morada", f[`contacto${n}Morada`], true)}
+        ${campo("Localidade", f[`contacto${n}Localidade`])}
+        ${campo("Código postal", f[`contacto${n}Cp`])}
+        ${campo("Documento de identificação", f[`contacto${n}Doc`])}
+        ${campo("Telefone / Telemóvel", [f[`contacto${n}Tlf`], f[`contacto${n}Tlm`]].filter(Boolean).join("  ·  "))}
+      </div></div>`;
+
+    const brasao = ctx.logoAutoridade
+      ? `<img class="of-brasao" src="${ctx.logoAutoridade}" alt="Brasão ${esc(tema.forca)}" />`
+      : brasaoPlaceholder(tema.cor, tema.sigla);
+
+    body = `<div class="of-top">
+        ${brasao}
+        <div>
+          <div class="of-min">${esc(tema.ministerio)}</div>
+          <div class="of-forca">${esc(tema.forca)}</div>
+          <div class="of-sub">${esc(f["subunidade"] ?? "")}</div>
         </div>
       </div>
-      <div class="muted" style="margin-top:2mm">Comunicação prevista no n.º 1 do artigo 11.º da Lei n.º 34/2013, de 16 de maio,
-      alterada e republicada pela Lei n.º 46/2019, de 8 de julho.</div>
+      <div class="of-titulo">Comunicação de instalação de alarme com sirene audível do exterior ou botão de pânico</div>
+      <div class="of-lei">Artigo 11.º, n.º 1, da Lei n.º 34/2013, de 16 de maio, alterada e republicada pela Lei n.º 46/2019, de 8 de julho</div>
 
-      <h2>Reservado ao serviço</h2>
-      <div class="grid">
-        <div class="f"><b>Local (subunidade)</b> ${esc(f["subunidade"] ?? "")}</div>
-        <div class="f"><b>N.º de registo</b> </div>
-        <div class="f"><b>Data</b> </div>
+      <div class="of-reserva">
+        <div class="of-lbl" style="margin-bottom:1mm">Reservado ao serviço</div>
+        <div class="of-grid tres">
+          ${campo("Local (subunidade)", f["subunidade"])}
+          ${campo("N.º de registo", "")}
+          ${campo("Data", "")}
+        </div>
       </div>
 
-      <h2>1. Comunicação (proprietário ou utilizador do alarme)</h2>
-      <div class="grid">
-        <div class="f"><b>Nome</b> ${esc(f["decNome"] ?? "")}</div>
-        <div class="f"><b>Morada</b> ${esc(f["decMorada"] ?? "")}</div>
-        <div class="f"><b>Localidade</b> ${esc(f["decLocalidade"] ?? "")}</div>
-        <div class="f"><b>Código postal</b> ${esc(f["decCp"] ?? "")}</div>
-        <div class="f"><b>Tipo doc. ident.</b> ${esc(f["decTipoDoc"] ?? "")}</div>
-        <div class="f"><b>N.º do documento</b> ${esc(f["decNumDoc"] ?? "")}</div>
-        <div class="f"><b>Telefone</b> ${esc(f["decTlf"] ?? "")}</div>
-        <div class="f"><b>Telemóvel</b> ${esc(f["decTlm"] ?? "")}</div>
-        <div class="f"><b>Correio eletrónico</b> ${esc(f["decEmail"] ?? "")}</div>
+      <div class="of-sec">1 &nbsp;·&nbsp; Comunicação — proprietário ou utilizador do alarme</div>
+      <div class="of-box"><div class="of-grid">
+        ${campo("Nome", f["decNome"], true)}
+        ${campo("Morada", f["decMorada"], true)}
+        ${campo("Localidade", f["decLocalidade"])}
+        ${campo("Código postal", f["decCp"])}
+        ${campo("Tipo de documento de identificação", f["decTipoDoc"])}
+        ${campo("N.º do documento", f["decNumDoc"])}
+        ${campo("Telefone", f["decTlf"])}
+        ${campo("Telemóvel", f["decTlm"])}
+        ${campo("Correio eletrónico", f["decEmail"], true)}
+      </div></div>
+
+      <div class="of-sec">2 &nbsp;·&nbsp; Local onde se encontra instalado o alarme</div>
+      <div class="of-box">
+        <div class="of-grid">
+          ${campo("Morada", f["localMorada"], true)}
+          ${campo("Localidade", f["localLocalidade"])}
+          ${campo("Código postal", f["localCp"])}
+        </div>
+        <div style="margin-top:2.5mm">
+          ${cx(f["sirene"], "Encontra-se instalado um alarme com <b>sirene audível do exterior</b>")}
+          ${cx(f["panico"], "Encontra-se instalado um <b>botão de pânico</b>")}
+        </div>
+        <div class="of-grid" style="margin-top:1.5mm">
+          ${campo("Marca", f["marca"])}
+          ${campo("Modelo", f["modelo"])}
+          ${campo("Alarme instalado por", f["instaladoPor"] ?? ctx.empresa?.nome ?? "", true)}
+          ${campo("N.º de registo prévio do instalador (PSP)", ctx.empresa?.registo ?? "")}
+          ${campo("Certificado de conformidade", ctx.instalacao?.num_registo ?? "")}
+        </div>
+        <div style="margin-top:1.5mm">
+          ${cx(f["juntaDeclaracao"], "Junta cópia da declaração de instalação, garantindo a conformidade com as normas técnicas aplicáveis")}
+        </div>
       </div>
 
-      <div style="margin-top:3mm">Declara que no local a seguir indicado:</div>
-      <div class="grid">
-        <div class="f"><b>Morada</b> ${esc(f["localMorada"] ?? "")}</div>
-        <div class="f"><b>Localidade</b> ${esc(f["localLocalidade"] ?? "")}</div>
-        <div class="f"><b>Código postal</b> ${esc(f["localCp"] ?? "")}</div>
-      </div>
-      <ul class="chk">
-        <li>${box(f["sirene"])} Encontra-se instalado um alarme com sirene audível do exterior</li>
-        <li>${box(f["panico"])} Encontra-se instalado um botão de pânico</li>
-      </ul>
-      <div class="grid">
-        <div class="f"><b>Marca</b> ${esc(f["marca"] ?? "")}</div>
-        <div class="f"><b>Modelo</b> ${esc(f["modelo"] ?? "")}</div>
-        <div class="f"><b>Alarme instalado por</b> ${esc(f["instaladoPor"] ?? ctx.empresa?.nome ?? "")}</div>
-        <div class="f"><b>Certificado de conformidade</b> ${esc(ctx.instalacao?.num_registo ?? "")}</div>
-      </div>
-      <div style="margin-top:2mm">${box(f["juntaDeclaracao"])} Junta cópia da declaração de instalação, garantindo a sua
-      conformidade com as normas técnicas aplicáveis.</div>
+      <div class="of-sec">3 &nbsp;·&nbsp; Reposição do alarme</div>
+      <div class="of-box of-nota" style="border-bottom:none;padding-bottom:0">Em caso de ocorrência com o alarme instalado deve ser
+        contactado o proprietário ou um dos responsáveis a seguir indicados.</div>
+      ${contacto("1", "Responsável 1")}
+      ${f["contacto2Nome"] ? contacto("2", "Responsável 2") : ""}
+      ${
+        f["observacoes"]
+          ? `<div class="of-sec">Observações</div><div class="of-box">${esc(f["observacoes"])}</div>`
+          : ""
+      }
 
-      <h2>2. Reposição do alarme</h2>
-      <div class="muted">Em caso de ocorrência com o alarme instalado, deve ser contactado o proprietário
-      ou um dos responsáveis abaixo indicados.</div>
-      ${contacto("1")}
-      ${f["contacto2Nome"] ? contacto("2") : ""}
-      ${f["observacoes"] ? `<h2>Observações</h2><div>${esc(f["observacoes"])}</div>` : ""}
-      ${assinaturas(ctx, "O instalador", "O proprietário / utilizador")}`;
+      <div class="of-sign">
+        <div><div class="of-linha">Data: ${dataPT(f["data"] ?? new Date().toISOString())}</div></div>
+        <div>${ctx.assinatura ? `<img src="${ctx.assinatura}" alt="Assinatura" />` : ""}<div class="of-linha">O proprietário / utilizador${
+          ctx.form["nomeAssinante"] ? `<br/>${esc(ctx.form["nomeAssinante"])}` : ""
+        }</div></div>
+        <div><div class="of-linha">${esc(ctx.empresa?.nome ?? "")}<br/>O instalador</div></div>
+      </div>`;
   }
 
-  return `<style>${CSS}</style><div class="doc">${body}${rodape(ctx)}</div>`;
+  return `<style>${CSS}</style><div class="doc${extraClass}"${extraStyle}>${body}${rodape(ctx)}</div>`;
 }
 
 export const CHECKLIST_AUTO = [
