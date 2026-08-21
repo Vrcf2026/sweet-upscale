@@ -125,6 +125,33 @@ function Gerar() {
   const [aVerificarCert, setAVerificarCert] = useState(false);
   const [checklist, setChecklist] = useState(CHECKLIST_AUTO.map((label) => ({ label, ok: true })));
   const [aGuardar, setAGuardar] = useState(false);
+  const [logoAutoridade, setLogoAutoridade] = useState<string | null>(null);
+
+  const autoridadeSel = form["autoridade"] ?? "psp";
+
+  useEffect(() => {
+    if (docTipo !== "comunicacao") return;
+    try {
+      setLogoAutoridade(localStorage.getItem(`brasao:${autoridadeSel}`));
+    } catch {
+      setLogoAutoridade(null);
+    }
+  }, [docTipo, autoridadeSel]);
+
+  async function aoEscolherBrasao(file: File) {
+    try {
+      const dataUrl = await comprimirImagem(file, 400, 0.9);
+      setLogoAutoridade(dataUrl);
+      try {
+        localStorage.setItem(`brasao:${autoridadeSel}`, dataUrl);
+      } catch {
+        /* espaço local cheio — brasão fica só nesta sessão */
+      }
+      toast.success("Brasão carregado");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
 
   async function aoEscolherFoto(file: File) {
     try {
@@ -261,6 +288,7 @@ function Gerar() {
         avaliacaoFoto,
         certificacoes,
         pendencias,
+        logoAutoridade,
       }),
     [
       docTipo,
@@ -276,6 +304,7 @@ function Gerar() {
       avaliacaoFoto,
       certificacoes,
       pendencias,
+      logoAutoridade,
     ],
   );
 
@@ -299,6 +328,7 @@ function Gerar() {
         avaliacaoFoto,
         certificacoes,
         pendencias,
+        logoAutoridade,
       });
       const { data, error } = await supabase
         .from("documentos")
