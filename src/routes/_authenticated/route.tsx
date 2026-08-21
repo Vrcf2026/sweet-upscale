@@ -4,6 +4,8 @@ import {
   Building2,
   Download,
   FileText,
+  History,
+
   LogOut,
   ShieldCheck,
   UserCog,
