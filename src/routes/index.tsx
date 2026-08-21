@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { ClipboardList, FileText, ShieldCheck, Signature } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoDialog } from "@/components/InfoDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -24,27 +25,6 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const FEATURES = [
-  {
-    icon: FileText,
-    titulo: "Quatro documentos oficiais",
-    texto:
-      "Relatório Técnico de Intervenção, Livro de Registos, Declaração e Auto de Instalação, sempre pré-preenchidos.",
-  },
-  {
-    icon: ClipboardList,
-    titulo: "Clientes e instalações",
-    texto:
-      "Cada cliente pode ter várias instalações, cada uma com o seu inventário, histórico e livro de registos.",
-  },
-  {
-    icon: Signature,
-    titulo: "Assinatura em obra",
-    texto:
-      "Assinatura no ecrã do telemóvel, foto do local e exportação para PDF descarregável.",
-  },
-];
-
 function Index() {
   const navigate = useNavigate();
 
@@ -55,49 +35,40 @@ function Index() {
   }, [navigate]);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="flex min-h-screen flex-col bg-background">
       <header className="border-b border-border bg-sidebar text-sidebar-foreground">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <span className="flex items-center gap-2 font-display text-lg font-semibold">
             <ShieldCheck className="h-5 w-5 text-accent" />
             Documentos de Segurança
           </span>
-          <Button asChild size="sm" variant="secondary">
-            <Link to="/auth">Entrar</Link>
-          </Button>
+          <InfoDialog
+            trigger={
+              <Button variant="ghost" size="sm" className="text-sidebar-foreground hover:bg-sidebar-accent">
+                Info
+              </Button>
+            }
+          />
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <p className="font-medium uppercase tracking-widest text-accent-foreground/70">
-          Instaladores com registo prévio PSP
-        </p>
-        <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">
-          Todos os documentos da tua instalação, em qualquer dispositivo.
+      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+        <ShieldCheck className="h-12 w-12 text-accent" />
+        <h1 className="mt-6 max-w-2xl text-3xl font-bold leading-tight md:text-4xl">
+          Documentos de Segurança Privada
         </h1>
-        <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-          Gera, assina e arquiva os documentos de cada instalação. Preenchimento assistido por IA a
-          partir de faturas, Excel ou orçamentos em PDF.
+        <p className="mt-3 max-w-md text-sm text-muted-foreground">
+          Acede à tua base de clientes, instalações e documentos oficiais.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button asChild size="lg">
-            <Link to="/auth">Começar</Link>
+            <Link to="/auth">Entrar</Link>
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link to="/auth" search={{ modo: "registo" }}>
               Criar conta
             </Link>
           </Button>
-        </div>
-
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {FEATURES.map((f) => (
-            <article key={f.titulo} className="rounded-lg border border-border bg-card p-6">
-              <f.icon className="h-6 w-6 text-accent" />
-              <h2 className="mt-4 text-base font-semibold">{f.titulo}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{f.texto}</p>
-            </article>
-          ))}
         </div>
       </section>
     </main>
