@@ -31,6 +31,7 @@ export type DocContext = {
   avaliacaoFoto?: string | null;
   certificacoes?: { equip: string; situacao: string; nota: string }[];
   pendencias?: string[];
+  logoAutoridade?: string | null;
 };
 
 const CSS = `
