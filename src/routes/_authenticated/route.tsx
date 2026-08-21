@@ -4,6 +4,8 @@ import {
   Building2,
   Download,
   FileText,
+  History,
+
   LogOut,
   ShieldCheck,
   UserCog,
@@ -65,6 +67,14 @@ function Layout() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              to="/auditoria"
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+            >
+              <History className="h-4 w-4" />
+              Auditoria
+            </Link>
             {isSuperadmin && (
               <Link
                 to="/utilizadores"
@@ -75,6 +85,7 @@ function Layout() {
                 Utilizadores
               </Link>
             )}
+
           </nav>
 
           <InfoDialog

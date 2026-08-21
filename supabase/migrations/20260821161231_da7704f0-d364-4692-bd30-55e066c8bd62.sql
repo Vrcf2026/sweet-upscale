@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.documentos_bloqueio() FROM PUBLIC, anon, authenticated;

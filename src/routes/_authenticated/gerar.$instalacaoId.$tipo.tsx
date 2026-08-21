@@ -24,6 +24,10 @@ import {
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
 import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
 import { AUTORIDADES, DOC_LABEL, type DocTipo } from "@/lib/model";
+import { CAMPOS_ASSINANTE, CAMPOS_DOC, agrupar } from "@/lib/campos";
+import { arquivarDocumento } from "@/lib/arquivo";
+import { registar } from "@/lib/auditoria";
+
 import {
   Select,
   SelectContent,
@@ -44,68 +48,8 @@ export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo"
   component: Gerar,
 });
 
-const CAMPOS: Record<DocTipo, [string, string, "input" | "area" | "date" | "time"][]> = {
-  relatorio: [
-    ["data", "Data", "date"],
-    ["hora", "Hora", "time"],
-    ["tipo", "Tipo de intervenção", "input"],
-    ["modo", "Modo de deteção", "input"],
-    ["tecnico", "Técnico", "input"],
-    ["causa", "Causa provável", "area"],
-    ["trabalhos", "Trabalhos efetuados", "area"],
-    ["conclusao", "Conclusão", "area"],
-  ],
-  livro: [],
-  declaracao: [
-    ["texto", "Texto da declaração (opcional)", "area"],
-    ["servicos", "Serviços contratados", "area"],
-  ],
-  auto: [
-    ["retencao", "Retenção de imagens (dias)", "input"],
-    ["testes", "Testes efetuados", "area"],
-    ["observacoes", "Observações", "area"],
-  ],
-  comunicacao: [
-    ["data", "Data", "date"],
-    ["subunidade", "Subunidade (esquadra / posto)", "input"],
-    ["decNome", "Nome do declarante", "input"],
-    ["decMorada", "Morada do declarante", "input"],
-    ["decLocalidade", "Localidade do declarante", "input"],
-    ["decCp", "Código postal do declarante", "input"],
-    ["decTipoDoc", "Tipo de doc. identificação", "input"],
-    ["decNumDoc", "N.º do documento", "input"],
-    ["decTlf", "Telefone", "input"],
-    ["decTlm", "Telemóvel", "input"],
-    ["decEmail", "Correio eletrónico", "input"],
-    ["localMorada", "Morada do local do alarme", "input"],
-    ["localLocalidade", "Localidade do local", "input"],
-    ["localCp", "Código postal do local", "input"],
-    ["marca", "Marca do alarme", "input"],
-    ["modelo", "Modelo do alarme", "input"],
-    ["instaladoPor", "Alarme instalado por", "input"],
-    ["contacto1Nome", "Reposição — nome do contacto 1", "input"],
-    ["contacto1Morada", "Reposição — morada do contacto 1", "input"],
-    ["contacto1Localidade", "Reposição — localidade do contacto 1", "input"],
-    ["contacto1Cp", "Reposição — código postal do contacto 1", "input"],
-    ["contacto1Doc", "Reposição — tipo e n.º doc. do contacto 1", "input"],
-    ["contacto1Tlf", "Reposição — telefone do contacto 1", "input"],
-    ["contacto1Tlm", "Reposição — telemóvel do contacto 1", "input"],
-    ["contacto2Nome", "Reposição — nome do contacto 2", "input"],
-    ["contacto2Morada", "Reposição — morada do contacto 2", "input"],
-    ["contacto2Localidade", "Reposição — localidade do contacto 2", "input"],
-    ["contacto2Cp", "Reposição — código postal do contacto 2", "input"],
-    ["contacto2Doc", "Reposição — tipo e n.º doc. do contacto 2", "input"],
-    ["contacto2Tlf", "Reposição — telefone do contacto 2", "input"],
-    ["contacto2Tlm", "Reposição — telemóvel do contacto 2", "input"],
-    ["observacoes", "Observações", "area"],
-  ],
-};
+// Os campos de cada documento vivem no esquema declarativo em src/lib/campos.ts
 
-const ASSINANTE: [string, string][] = [
-  ["nomeAssinante", "Nome de quem assina"],
-  ["qualidadeAssinante", "Qualidade (ex.: responsável pelo sistema)"],
-  ["docAssinante", "N.º CC / NIF"],
-];
 
 function Gerar() {
   const { instalacaoId, tipo } = Route.useParams();
@@ -346,10 +290,24 @@ function Gerar() {
         .select("id")
         .single();
       if (error) throw new Error(error.message);
+      await registar(
+        "documento",
+        "criou",
+        data.id,
+        `${DOC_LABEL[docTipo]} ${numero} ${comoRascunho ? "guardado como rascunho" : "gerado"}`,
+      );
+      if (!comoRascunho && assinatura) {
+        try {
+          await arquivarDocumento({ id: data.id, numero, html: finalHtml });
+        } catch {
+          /* o arquivo é complementar; o documento já ficou guardado */
+        }
+      }
       toast.success(
         comoRascunho ? `Rascunho ${numero} guardado` : `Documento ${numero} criado`,
       );
       navigate({ to: "/documentos/$documentoId", params: { documentoId: data.id } });
+
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -379,33 +337,40 @@ function Gerar() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preenchimento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {(CAMPOS[docTipo] ?? []).map(([campo, label, kind]) => (
-                <div key={campo} className="space-y-2">
-                  <Label htmlFor={campo}>{label}</Label>
-                  {kind === "area" ? (
-                    <Textarea
-                      id={campo}
-                      rows={3}
-                      value={form[campo] ?? ""}
-                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                    />
-                  ) : (
-                    <Input
-                      id={campo}
-                      type={kind === "date" ? "date" : kind === "time" ? "time" : "text"}
-                      value={form[campo] ?? ""}
-                      onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
-                    />
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {agrupar(CAMPOS_DOC[docTipo] ?? []).map(({ grupo, campos }) => (
+            <Card key={grupo}>
+              <CardHeader>
+                <CardTitle>{grupo}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+
+                {campos.map((c) => (
+                  <div
+                    key={c.nome}
+                    className={`space-y-2 ${c.tipo === "area" ? "sm:col-span-2" : ""}`}
+                  >
+                    <Label htmlFor={c.nome}>{c.label}</Label>
+                    {c.tipo === "area" ? (
+                      <Textarea
+                        id={c.nome}
+                        rows={3}
+                        value={form[c.nome] ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
+                      />
+                    ) : (
+                      <Input
+                        id={c.nome}
+                        type={c.tipo === "date" ? "date" : c.tipo === "time" ? "time" : "text"}
+                        value={form[c.nome] ?? ""}
+                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+
 
           {docTipo === "comunicacao" && (
             <Card>
@@ -606,29 +571,50 @@ function Gerar() {
               <CardTitle>Identificação de quem assina</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {ASSINANTE.map(([campo, label]) => (
-                <div key={campo} className="space-y-2">
-                  <Label htmlFor={campo}>{label}</Label>
+              {CAMPOS_ASSINANTE.map(({ nome, label }) => (
+                <div key={nome} className="space-y-2">
+                  <Label htmlFor={nome}>{label}</Label>
                   <Input
-                    id={campo}
-                    value={form[campo] ?? ""}
-                    onChange={(e) => setForm((f) => ({ ...f, [campo]: e.target.value }))}
+                    id={nome}
+                    value={form[nome] ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, [nome]: e.target.value }))}
                   />
                 </div>
               ))}
               <SignaturePad value={assinatura} onChange={setAssinatura} />
             </CardContent>
           </Card>
-
-          <Button onClick={() => guardar(false)} disabled={aGuardar} className="w-full">
-            Gerar e guardar documento
-          </Button>
         </div>
 
-        <div className="overflow-x-auto rounded-md bg-white p-4">
+        <div className="hidden overflow-x-auto rounded-md bg-white p-4 lg:block">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </div>
+
+        <details className="rounded-md border border-border bg-card p-3 lg:hidden">
+          <summary className="cursor-pointer text-sm font-medium">
+            Pré-visualizar documento
+          </summary>
+          <div className="mt-3 overflow-x-auto rounded-md bg-white p-2">
+            <div dangerouslySetInnerHTML={{ __html: html }} />
+          </div>
+        </details>
+      </div>
+
+      {/* barra de ações fixa — pensada para uso no terreno, no telemóvel */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-md sm:border">
+        <Button
+          variant="secondary"
+          className="flex-1"
+          disabled={aGuardar}
+          onClick={() => guardar(true)}
+        >
+          <Save className="h-4 w-4" /> Rascunho
+        </Button>
+        <Button className="flex-1" onClick={() => guardar(false)} disabled={aGuardar}>
+          Gerar e guardar
+        </Button>
       </div>
     </div>
+
   );
 }

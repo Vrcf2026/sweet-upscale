@@ -96,3 +96,39 @@ export async function extrairTextoPdf(file: File): Promise<string> {
   }
   return texto;
 }
+
+/**
+ * Impressão vetorial: abre o documento numa janela de impressão do navegador.
+ * O PDF resultante tem texto real (pesquisável, leve) ao contrário do export por imagem.
+ */
+export function imprimirDoc(html: string, titulo = "documento") {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument;
+  if (!doc) {
+    document.body.removeChild(iframe);
+    throw new Error("Não foi possível preparar a impressão");
+  }
+  doc.open();
+  doc.write(
+    `<!doctype html><html lang="pt"><head><meta charset="utf-8"><title>${titulo}</title>` +
+      `<style>@page{size:A4;margin:0}body{margin:0}` +
+      `.doc{box-shadow:none!important}</style></head><body>${html}</body></html>`,
+  );
+  doc.close();
+
+  const arrancar = () => {
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+    window.setTimeout(() => iframe.remove(), 1000);
+  };
+  if (doc.readyState === "complete") window.setTimeout(arrancar, 300);
+  else iframe.onload = () => window.setTimeout(arrancar, 300);
+}
