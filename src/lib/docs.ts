@@ -31,6 +31,7 @@ export type DocContext = {
   avaliacaoFoto?: string | null;
   certificacoes?: { equip: string; situacao: string; nota: string }[];
   pendencias?: string[];
+  logoAutoridade?: string | null;
 };
 
 const CSS = `
@@ -59,7 +60,58 @@ const CSS = `
   .doc .nota-ia b { color:#1d4d8f; }
   .doc .cert-ok { color:#1a7a3c; }
   .doc .cert-alerta { color:#a12f2f; }
+
+  /* ---- Formulário oficial de comunicação de alarme (PSP / GNR) ---- */
+  .doc.oficial { font-family:"Arial", Helvetica, sans-serif; }
+  .oficial .of-top { display:flex; align-items:center; gap:6mm; border-bottom:3px solid var(--of); padding-bottom:3mm; }
+  .oficial .of-brasao { width:20mm; height:20mm; object-fit:contain; }
+  .oficial .of-min { font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; color:#333; }
+  .oficial .of-forca { font-size:15px; font-weight:700; color:var(--of); text-transform:uppercase; letter-spacing:.6px; }
+  .oficial .of-sub { font-size:9.5px; color:#555; }
+  .oficial .of-titulo { margin:4mm 0 1mm; background:var(--of); color:#fff; padding:2.2mm 3mm; font-size:12.5px;
+    font-weight:700; text-transform:uppercase; letter-spacing:.6px; text-align:center; border-radius:1mm; }
+  .oficial .of-lei { text-align:center; font-size:9px; color:#444; margin-bottom:3mm; }
+  .oficial .of-sec { background:color-mix(in srgb, var(--of) 12%, #fff); border-left:3mm solid var(--of);
+    padding:1.6mm 3mm; font-size:10.5px; font-weight:700; text-transform:uppercase; margin:4mm 0 0; color:#111; }
+  .oficial .of-box { border:1px solid var(--of); border-top:none; padding:2.5mm 3mm; }
+  .oficial .of-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5mm 5mm; }
+  .oficial .of-grid.tres { grid-template-columns:2fr 1fr 1fr; }
+  .oficial .of-c { grid-column:1 / -1; }
+  .oficial .of-lbl { display:block; font-size:8px; text-transform:uppercase; letter-spacing:.4px; color:#666; }
+  .oficial .of-val { display:block; min-height:5mm; border-bottom:1px solid #b9b9b9; font-size:11px; padding-top:.6mm; }
+  .oficial .of-chk { display:flex; gap:2mm; align-items:flex-start; font-size:10.5px; margin:1.5mm 0; }
+  .oficial .of-sq { display:inline-block; width:4mm; height:4mm; border:1px solid var(--of); text-align:center;
+    line-height:3.6mm; font-size:9px; font-weight:700; color:var(--of); flex:none; }
+  .oficial .of-reserva { border:1px dashed #888; background:#f6f6f6; padding:2.5mm 3mm; }
+  .oficial .of-nota { font-size:9px; color:#555; margin-top:1.5mm; }
+  .oficial .of-sign { margin-top:7mm; display:flex; gap:10mm; }
+  .oficial .of-sign div { flex:1; text-align:center; font-size:9.5px; }
+  .oficial .of-sign .of-linha { border-top:1px solid #111; margin-top:12mm; padding-top:1.2mm; }
+  .oficial .of-sign img { max-height:16mm; display:block; margin:0 auto -1mm; }
 `;
+
+const AUT_TEMA: Record<string, { cor: string; ministerio: string; forca: string; sigla: string }> = {
+  psp: {
+    cor: "#123a72",
+    ministerio: "Ministério da Administração Interna",
+    forca: "Polícia de Segurança Pública",
+    sigla: "PSP",
+  },
+  gnr: {
+    cor: "#14532d",
+    ministerio: "Ministério da Administração Interna",
+    forca: "Guarda Nacional Republicana",
+    sigla: "GNR",
+  },
+};
+
+function brasaoPlaceholder(cor: string, sigla: string) {
+  return `<svg class="of-brasao" viewBox="0 0 100 100" role="img" aria-label="Brasão ${sigla}">
+    <path d="M50 4 92 18v34c0 24-18 38-42 44C26 90 8 76 8 52V18z" fill="#fff" stroke="${cor}" stroke-width="5"/>
+    <path d="M50 16 80 26v26c0 17-13 27-30 32-17-5-30-15-30-32V26z" fill="${cor}" opacity=".12"/>
+    <text x="50" y="60" text-anchor="middle" font-family="Arial" font-size="26" font-weight="700" fill="${cor}">${sigla}</text>
+  </svg>`;
+}
 
 function header(ctx: DocContext, titulo: string) {
   const e = ctx.empresa;
@@ -248,80 +300,111 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
+  let extraClass = "";
+  let extraStyle = "";
+
   if (ctx.tipo === "comunicacao") {
     const f = ctx.form;
-    const gnr = (f["autoridade"] ?? "psp") === "gnr";
-    const autoridade = gnr
-      ? "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Guarda Nacional Republicana"
-      : "MINISTÉRIO DA ADMINISTRAÇÃO INTERNA<br/>Polícia de Segurança Pública";
-    const box = (v?: string) => (v === "sim" ? "&#9745;" : "&#9744;");
-    const contacto = (n: string) => `<div class="grid">
-      <div class="f"><b>Nome</b> ${esc(f[`contacto${n}Nome`] ?? "")}</div>
-      <div class="f"><b>Morada</b> ${esc(f[`contacto${n}Morada`] ?? "")}</div>
-      <div class="f"><b>Localidade</b> ${esc(f[`contacto${n}Localidade`] ?? "")}</div>
-      <div class="f"><b>Código postal</b> ${esc(f[`contacto${n}Cp`] ?? "")}</div>
-      <div class="f"><b>Doc. identificação</b> ${esc(f[`contacto${n}Doc`] ?? "")}</div>
-      <div class="f"><b>Telefone / Telemóvel</b> ${esc(f[`contacto${n}Tlf`] ?? "")} ${esc(f[`contacto${n}Tlm`] ?? "")}</div>
-    </div>`;
-    body = `<div class="hdr">
-        <div><div style="font-size:12px;font-weight:700">${autoridade}</div></div>
-        <div style="text-align:right">
-          <h1>Comunicação de Instalação de Alarme</h1>
-          <div class="muted">${dataPT(f["data"] ?? new Date().toISOString())}</div>
+    const chave = (f["autoridade"] ?? "psp") === "gnr" ? "gnr" : "psp";
+    const tema = AUT_TEMA[chave]!;
+    extraClass = " oficial";
+    extraStyle = ` style="--of:${tema.cor}"`;
+
+    const campo = (label: string, valor?: string | null, span = false) =>
+      `<div${span ? ' class="of-c"' : ""}><span class="of-lbl">${esc(label)}</span><span class="of-val">${esc(valor ?? "")}</span></div>`;
+    const cx = (v: string | undefined, label: string) =>
+      `<div class="of-chk"><span class="of-sq">${v === "sim" ? "X" : "&nbsp;"}</span><span>${label}</span></div>`;
+    const contacto = (n: string, titulo: string) => `<div class="of-sec">${esc(titulo)}</div>
+      <div class="of-box"><div class="of-grid">
+        ${campo("Nome", f[`contacto${n}Nome`], true)}
+        ${campo("Morada", f[`contacto${n}Morada`], true)}
+        ${campo("Localidade", f[`contacto${n}Localidade`])}
+        ${campo("Código postal", f[`contacto${n}Cp`])}
+        ${campo("Documento de identificação", f[`contacto${n}Doc`])}
+        ${campo("Telefone / Telemóvel", [f[`contacto${n}Tlf`], f[`contacto${n}Tlm`]].filter(Boolean).join("  ·  "))}
+      </div></div>`;
+
+    const brasao = ctx.logoAutoridade
+      ? `<img class="of-brasao" src="${ctx.logoAutoridade}" alt="Brasão ${esc(tema.forca)}" />`
+      : brasaoPlaceholder(tema.cor, tema.sigla);
+
+    body = `<div class="of-top">
+        ${brasao}
+        <div>
+          <div class="of-min">${esc(tema.ministerio)}</div>
+          <div class="of-forca">${esc(tema.forca)}</div>
+          <div class="of-sub">${esc(f["subunidade"] ?? "")}</div>
         </div>
       </div>
-      <div class="muted" style="margin-top:2mm">Comunicação prevista no n.º 1 do artigo 11.º da Lei n.º 34/2013, de 16 de maio,
-      alterada e republicada pela Lei n.º 46/2019, de 8 de julho.</div>
+      <div class="of-titulo">Comunicação de instalação de alarme com sirene audível do exterior ou botão de pânico</div>
+      <div class="of-lei">Artigo 11.º, n.º 1, da Lei n.º 34/2013, de 16 de maio, alterada e republicada pela Lei n.º 46/2019, de 8 de julho</div>
 
-      <h2>Reservado ao serviço</h2>
-      <div class="grid">
-        <div class="f"><b>Local (subunidade)</b> ${esc(f["subunidade"] ?? "")}</div>
-        <div class="f"><b>N.º de registo</b> </div>
-        <div class="f"><b>Data</b> </div>
+      <div class="of-reserva">
+        <div class="of-lbl" style="margin-bottom:1mm">Reservado ao serviço</div>
+        <div class="of-grid tres">
+          ${campo("Local (subunidade)", f["subunidade"])}
+          ${campo("N.º de registo", "")}
+          ${campo("Data", "")}
+        </div>
       </div>
 
-      <h2>1. Comunicação (proprietário ou utilizador do alarme)</h2>
-      <div class="grid">
-        <div class="f"><b>Nome</b> ${esc(f["decNome"] ?? "")}</div>
-        <div class="f"><b>Morada</b> ${esc(f["decMorada"] ?? "")}</div>
-        <div class="f"><b>Localidade</b> ${esc(f["decLocalidade"] ?? "")}</div>
-        <div class="f"><b>Código postal</b> ${esc(f["decCp"] ?? "")}</div>
-        <div class="f"><b>Tipo doc. ident.</b> ${esc(f["decTipoDoc"] ?? "")}</div>
-        <div class="f"><b>N.º do documento</b> ${esc(f["decNumDoc"] ?? "")}</div>
-        <div class="f"><b>Telefone</b> ${esc(f["decTlf"] ?? "")}</div>
-        <div class="f"><b>Telemóvel</b> ${esc(f["decTlm"] ?? "")}</div>
-        <div class="f"><b>Correio eletrónico</b> ${esc(f["decEmail"] ?? "")}</div>
+      <div class="of-sec">1 &nbsp;·&nbsp; Comunicação — proprietário ou utilizador do alarme</div>
+      <div class="of-box"><div class="of-grid">
+        ${campo("Nome", f["decNome"], true)}
+        ${campo("Morada", f["decMorada"], true)}
+        ${campo("Localidade", f["decLocalidade"])}
+        ${campo("Código postal", f["decCp"])}
+        ${campo("Tipo de documento de identificação", f["decTipoDoc"])}
+        ${campo("N.º do documento", f["decNumDoc"])}
+        ${campo("Telefone", f["decTlf"])}
+        ${campo("Telemóvel", f["decTlm"])}
+        ${campo("Correio eletrónico", f["decEmail"], true)}
+      </div></div>
+
+      <div class="of-sec">2 &nbsp;·&nbsp; Local onde se encontra instalado o alarme</div>
+      <div class="of-box">
+        <div class="of-grid">
+          ${campo("Morada", f["localMorada"], true)}
+          ${campo("Localidade", f["localLocalidade"])}
+          ${campo("Código postal", f["localCp"])}
+        </div>
+        <div style="margin-top:2.5mm">
+          ${cx(f["sirene"], "Encontra-se instalado um alarme com <b>sirene audível do exterior</b>")}
+          ${cx(f["panico"], "Encontra-se instalado um <b>botão de pânico</b>")}
+        </div>
+        <div class="of-grid" style="margin-top:1.5mm">
+          ${campo("Marca", f["marca"])}
+          ${campo("Modelo", f["modelo"])}
+          ${campo("Alarme instalado por", f["instaladoPor"] ?? ctx.empresa?.nome ?? "", true)}
+          ${campo("N.º de registo prévio do instalador (PSP)", ctx.empresa?.registo ?? "")}
+          ${campo("Certificado de conformidade", ctx.instalacao?.num_registo ?? "")}
+        </div>
+        <div style="margin-top:1.5mm">
+          ${cx(f["juntaDeclaracao"], "Junta cópia da declaração de instalação, garantindo a conformidade com as normas técnicas aplicáveis")}
+        </div>
       </div>
 
-      <div style="margin-top:3mm">Declara que no local a seguir indicado:</div>
-      <div class="grid">
-        <div class="f"><b>Morada</b> ${esc(f["localMorada"] ?? "")}</div>
-        <div class="f"><b>Localidade</b> ${esc(f["localLocalidade"] ?? "")}</div>
-        <div class="f"><b>Código postal</b> ${esc(f["localCp"] ?? "")}</div>
-      </div>
-      <ul class="chk">
-        <li>${box(f["sirene"])} Encontra-se instalado um alarme com sirene audível do exterior</li>
-        <li>${box(f["panico"])} Encontra-se instalado um botão de pânico</li>
-      </ul>
-      <div class="grid">
-        <div class="f"><b>Marca</b> ${esc(f["marca"] ?? "")}</div>
-        <div class="f"><b>Modelo</b> ${esc(f["modelo"] ?? "")}</div>
-        <div class="f"><b>Alarme instalado por</b> ${esc(f["instaladoPor"] ?? ctx.empresa?.nome ?? "")}</div>
-        <div class="f"><b>Certificado de conformidade</b> ${esc(ctx.instalacao?.num_registo ?? "")}</div>
-      </div>
-      <div style="margin-top:2mm">${box(f["juntaDeclaracao"])} Junta cópia da declaração de instalação, garantindo a sua
-      conformidade com as normas técnicas aplicáveis.</div>
+      <div class="of-sec">3 &nbsp;·&nbsp; Reposição do alarme</div>
+      <div class="of-box of-nota" style="border-bottom:none;padding-bottom:0">Em caso de ocorrência com o alarme instalado deve ser
+        contactado o proprietário ou um dos responsáveis a seguir indicados.</div>
+      ${contacto("1", "Responsável 1")}
+      ${f["contacto2Nome"] ? contacto("2", "Responsável 2") : ""}
+      ${
+        f["observacoes"]
+          ? `<div class="of-sec">Observações</div><div class="of-box">${esc(f["observacoes"])}</div>`
+          : ""
+      }
 
-      <h2>2. Reposição do alarme</h2>
-      <div class="muted">Em caso de ocorrência com o alarme instalado, deve ser contactado o proprietário
-      ou um dos responsáveis abaixo indicados.</div>
-      ${contacto("1")}
-      ${f["contacto2Nome"] ? contacto("2") : ""}
-      ${f["observacoes"] ? `<h2>Observações</h2><div>${esc(f["observacoes"])}</div>` : ""}
-      ${assinaturas(ctx, "O instalador", "O proprietário / utilizador")}`;
+      <div class="of-sign">
+        <div><div class="of-linha">Data: ${dataPT(f["data"] ?? new Date().toISOString())}</div></div>
+        <div>${ctx.assinatura ? `<img src="${ctx.assinatura}" alt="Assinatura" />` : ""}<div class="of-linha">O proprietário / utilizador${
+          ctx.form["nomeAssinante"] ? `<br/>${esc(ctx.form["nomeAssinante"])}` : ""
+        }</div></div>
+        <div><div class="of-linha">${esc(ctx.empresa?.nome ?? "")}<br/>O instalador</div></div>
+      </div>`;
   }
 
-  return `<style>${CSS}</style><div class="doc">${body}${rodape(ctx)}</div>`;
+  return `<style>${CSS}</style><div class="doc${extraClass}"${extraStyle}>${body}${rodape(ctx)}</div>`;
 }
 
 export const CHECKLIST_AUTO = [
