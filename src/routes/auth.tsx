@@ -7,15 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { arrancarSuperadmin } from "@/lib/admin.functions";
 
-
 export const Route = createFileRoute("/auth")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { modo?: "registo" | "entrar" } =>
-    search["modo"] === "registo" ? { modo: "registo" } : {},
   head: () => ({
     meta: [
       { title: "Entrar — Documentos de Segurança Privada" },
@@ -31,44 +25,32 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { modo } = Route.useSearch();
   const navigate = useNavigate();
-  const [registo, setRegisto] = useState(modo === "registo");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
   const [aguarda, setAguarda] = useState(false);
+  const [recuperar, setRecuperar] = useState(false);
 
   useEffect(() => {
     void arrancarSuperadmin().catch(() => undefined);
   }, []);
 
-
-
   async function submeter(e: React.FormEvent) {
     e.preventDefault();
     setAguarda(true);
     try {
-      if (registo) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { nome },
-          },
+      if (recuperar) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        if (!data.session) {
-          toast.success("Conta criada. Confirma o email para entrares.");
-          return;
-        }
-        navigate({ to: "/painel", replace: true });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/painel", replace: true });
+        toast.success("Se a conta existir, enviámos um email para redefinir a palavra-passe.");
+        setRecuperar(false);
+        return;
       }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      navigate({ to: "/painel", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível autenticar");
     } finally {
@@ -76,36 +58,20 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Não foi possível entrar com Google");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/painel", replace: true });
-  }
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-sidebar px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader>
           <ShieldCheck className="h-7 w-7 text-accent" />
-          <CardTitle>{registo ? "Criar conta" : "Entrar"}</CardTitle>
+          <CardTitle>{recuperar ? "Recuperar palavra-passe" : "Entrar"}</CardTitle>
           <CardDescription>
-            Documentos de segurança privada — acesso à tua base de clientes e instalações.
+            {recuperar
+              ? "Indica o teu email e recebes uma ligação para definir nova palavra-passe."
+              : "As contas são criadas pelo administrador. Usa as credenciais que te foram atribuídas."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={submeter} className="space-y-4">
-            {registo && (
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome</Label>
-                <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -116,32 +82,30 @@ function AuthPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Palavra-passe</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {!recuperar && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Palavra-passe</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={aguarda}>
-              {registo ? "Criar conta" : "Entrar"}
+              {recuperar ? "Enviar email de recuperação" : "Entrar"}
             </Button>
           </form>
-
-          <Button type="button" variant="outline" className="w-full" onClick={google}>
-            Continuar com Google
-          </Button>
 
           <button
             type="button"
             className="w-full text-sm text-muted-foreground underline-offset-4 hover:underline"
-            onClick={() => setRegisto((v) => !v)}
+            onClick={() => setRecuperar((v) => !v)}
           >
-            {registo ? "Já tenho conta" : "Ainda não tenho conta"}
+            {recuperar ? "Voltar ao início de sessão" : "Esqueci-me da palavra-passe"}
           </button>
         </CardContent>
       </Card>

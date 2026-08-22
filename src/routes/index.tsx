@@ -60,16 +60,14 @@ function Index() {
         <p className="mt-3 max-w-md text-sm text-muted-foreground">
           Acede à tua base de clientes, instalações e documentos oficiais.
         </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <div className="mt-8 flex justify-center">
           <Button asChild size="lg">
             <Link to="/auth">Entrar</Link>
           </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/auth" search={{ modo: "registo" }}>
-              Criar conta
-            </Link>
-          </Button>
         </div>
+        <p className="mt-4 text-xs text-muted-foreground">
+          As contas são criadas pelo administrador.
+        </p>
       </section>
     </main>
   );
