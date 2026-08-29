@@ -86,6 +86,42 @@ export type Database = {
         }
         Relationships: []
       }
+      backups: {
+        Row: {
+          created_at: string
+          drive_file_id: string | null
+          drive_link: string | null
+          erro: string | null
+          estado: string
+          ficheiro: string
+          id: string
+          origem: string
+          tamanho_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          drive_file_id?: string | null
+          drive_link?: string | null
+          erro?: string | null
+          estado?: string
+          ficheiro?: string
+          id?: string
+          origem?: string
+          tamanho_bytes?: number
+        }
+        Update: {
+          created_at?: string
+          drive_file_id?: string | null
+          drive_link?: string | null
+          erro?: string | null
+          estado?: string
+          ficheiro?: string
+          id?: string
+          origem?: string
+          tamanho_bytes?: number
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           contacto: string | null
