@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { CloudUpload, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { enviarBackupDrive, listarBackups, type RegistoBackup } from "@/lib/backup.functions";
 import {
   fetchClientes,
   fetchDocumentos,
   fetchEmpresa,
   fetchInstalacoes,
 } from "@/lib/data";
+
 
 export const Route = createFileRoute("/_authenticated/backup")({
   head: () => ({
