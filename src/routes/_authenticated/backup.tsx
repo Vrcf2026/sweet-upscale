@@ -165,6 +165,51 @@ function BackupPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Google Drive</CardTitle>
+          <CardDescription>
+            Os backups são enviados para a pasta <strong>Backups Registo Prévio</strong> da conta
+            Google da empresa. Além do envio manual, corre automaticamente todos os dias às 03:00.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button onClick={paraDrive} disabled={aEnviar}>
+            <CloudUpload className="h-4 w-4" /> {aEnviar ? "A enviar…" : "Enviar agora para a Drive"}
+          </Button>
+
+          {historico.length > 0 && (
+            <ul className="divide-y rounded-md border text-sm">
+              {historico.map((b) => (
+                <li key={b.id} className="flex items-center justify-between gap-3 p-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{b.ficheiro}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(b.created_at).toLocaleString("pt-PT")} · {b.origem} ·{" "}
+                      {b.estado === "ok"
+                        ? `${Math.max(1, Math.round(b.tamanho_bytes / 1024))} KB`
+                        : (b.erro ?? "erro")}
+                    </p>
+                  </div>
+                  {b.drive_link && (
+                    <a
+                      className="shrink-0 text-primary"
+                      href={b.drive_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Abrir na Google Drive"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+
 }
