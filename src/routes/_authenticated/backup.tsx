@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { CloudUpload, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { enviarBackupDrive, listarBackups, type RegistoBackup } from "@/lib/backup.functions";
 import {
   fetchClientes,
   fetchDocumentos,
   fetchEmpresa,
   fetchInstalacoes,
 } from "@/lib/data";
+
 
 export const Route = createFileRoute("/_authenticated/backup")({
   head: () => ({
@@ -45,6 +47,34 @@ function csv(linhas: Record<string, unknown>[]) {
 
 function BackupPage() {
   const [aExportar, setAExportar] = useState(false);
+  const [aEnviar, setAEnviar] = useState(false);
+  const [historico, setHistorico] = useState<RegistoBackup[]>([]);
+
+  async function carregarHistorico() {
+    try {
+      setHistorico(await listarBackups());
+    } catch {
+      setHistorico([]);
+    }
+  }
+
+  useEffect(() => {
+    void carregarHistorico();
+  }, []);
+
+  async function paraDrive() {
+    try {
+      setAEnviar(true);
+      const r = await enviarBackupDrive({ data: undefined });
+      toast.success(`Backup enviado para a Google Drive: ${r.ficheiro}`);
+      await carregarHistorico();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAEnviar(false);
+    }
+  }
+
 
   async function recolher() {
     const [empresa, clientes, instalacoes, documentos] = await Promise.all([
@@ -135,6 +165,51 @@ function BackupPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Google Drive</CardTitle>
+          <CardDescription>
+            Os backups são enviados para a pasta <strong>Backups Registo Prévio</strong> da conta
+            Google da empresa. Além do envio manual, corre automaticamente todos os dias às 03:00.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button onClick={paraDrive} disabled={aEnviar}>
+            <CloudUpload className="h-4 w-4" /> {aEnviar ? "A enviar…" : "Enviar agora para a Drive"}
+          </Button>
+
+          {historico.length > 0 && (
+            <ul className="divide-y rounded-md border text-sm">
+              {historico.map((b) => (
+                <li key={b.id} className="flex items-center justify-between gap-3 p-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{b.ficheiro}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(b.created_at).toLocaleString("pt-PT")} · {b.origem} ·{" "}
+                      {b.estado === "ok"
+                        ? `${Math.max(1, Math.round(b.tamanho_bytes / 1024))} KB`
+                        : (b.erro ?? "erro")}
+                    </p>
+                  </div>
+                  {b.drive_link && (
+                    <a
+                      className="shrink-0 text-primary"
+                      href={b.drive_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="Abrir na Google Drive"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+
 }
