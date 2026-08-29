@@ -47,6 +47,34 @@ function csv(linhas: Record<string, unknown>[]) {
 
 function BackupPage() {
   const [aExportar, setAExportar] = useState(false);
+  const [aEnviar, setAEnviar] = useState(false);
+  const [historico, setHistorico] = useState<RegistoBackup[]>([]);
+
+  async function carregarHistorico() {
+    try {
+      setHistorico(await listarBackups());
+    } catch {
+      setHistorico([]);
+    }
+  }
+
+  useEffect(() => {
+    void carregarHistorico();
+  }, []);
+
+  async function paraDrive() {
+    try {
+      setAEnviar(true);
+      const r = await enviarBackupDrive({ data: undefined });
+      toast.success(`Backup enviado para a Google Drive: ${r.ficheiro}`);
+      await carregarHistorico();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setAEnviar(false);
+    }
+  }
+
 
   async function recolher() {
     const [empresa, clientes, instalacoes, documentos] = await Promise.all([
