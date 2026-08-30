@@ -79,3 +79,41 @@ export async function proximoNumero() {
   const { proximoNumeroDoc } = await import("./numeracao.functions");
   return String(await proximoNumeroDoc());
 }
+
+/** Pesquisa global — equipamento e intervenções de todas as instalações. */
+export async function fetchEquipamentosTodos() {
+  const res = await supabase
+    .from("equipamentos")
+    .select("id, instalacao_id, equip, marca, serie, local")
+    .limit(2000);
+  return unwrap<
+    {
+      id: string;
+      instalacao_id: string;
+      equip: string;
+      marca: string | null;
+      serie: string | null;
+      local: string | null;
+    }[]
+  >(res);
+}
+
+export async function fetchIntervencoesTodas() {
+  const res = await supabase
+    .from("intervencoes")
+    .select("id, instalacao_id, data, tipo, causa, trabalhos, num_relatorio, tecnico")
+    .order("data", { ascending: false })
+    .limit(2000);
+  return unwrap<
+    {
+      id: string;
+      instalacao_id: string;
+      data: string;
+      tipo: string | null;
+      causa: string | null;
+      trabalhos: string | null;
+      num_relatorio: string | null;
+      tecnico: string | null;
+    }[]
+  >(res);
+}
