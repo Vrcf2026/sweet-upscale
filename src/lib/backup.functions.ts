@@ -34,7 +34,7 @@ export const enviarBackupDrive = createServerFn({ method: "POST" })
 export const listarBackups = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RegistoBackup[]> => {
-    const sb = context.supabase as {
+    const sb = context.supabase as unknown as {
       from: (t: string) => {
         select: (c: string) => {
           order: (
@@ -44,6 +44,7 @@ export const listarBackups = createServerFn({ method: "GET" })
         };
       };
     };
+
     const { data } = await sb
       .from("backups")
       .select("*")
