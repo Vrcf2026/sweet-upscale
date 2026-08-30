@@ -122,6 +122,27 @@ export type Database = {
         }
         Relationships: []
       }
+      brasoes: {
+        Row: {
+          autoridade: string
+          imagem: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          autoridade: string
+          imagem: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          autoridade?: string
+          imagem?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           contacto: string | null
