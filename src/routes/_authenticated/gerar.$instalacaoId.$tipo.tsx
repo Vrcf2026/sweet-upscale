@@ -1,16 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { SignaturePad } from "@/components/SignaturePad";
-import { comprimirImagem } from "@/lib/ficheiros";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchCliente,
@@ -22,19 +15,19 @@ import {
   proximoNumero,
 } from "@/lib/data";
 import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
-import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
-import { AUTORIDADES, DOC_LABEL, type DocTipo } from "@/lib/model";
-import { CAMPOS_ASSINANTE, CAMPOS_DOC, agrupar } from "@/lib/campos";
+import { DOC_LABEL, type DocTipo } from "@/lib/model";
+import { CAMPOS_DOC } from "@/lib/campos";
 import { arquivarDocumento } from "@/lib/arquivo";
 import { registar } from "@/lib/auditoria";
-
+import { BlocoAssinatura, CamposDocumento } from "@/components/gerar/CamposDocumento";
+import { BlocoComunicacao } from "@/components/gerar/BlocoComunicacao";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  BlocoCertificacoes,
+  BlocoChecklist,
+  BlocoFoto,
+  BlocoPendencias,
+  type Certificacao,
+} from "@/components/gerar/BlocoAuto";
 
 export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo")({
   head: () => ({
@@ -48,9 +41,6 @@ export const Route = createFileRoute("/_authenticated/gerar/$instalacaoId/$tipo"
   component: Gerar,
 });
 
-// Os campos de cada documento vivem no esquema declarativo em src/lib/campos.ts
-
-
 function Gerar() {
   const { instalacaoId, tipo } = Route.useParams();
   const docTipo = tipo as DocTipo;
@@ -60,88 +50,11 @@ function Gerar() {
   });
   const [assinatura, setAssinatura] = useState<string | null>(null);
   const [foto, setFoto] = useState<string | null>(null);
-  const [aComprimirFoto, setAComprimirFoto] = useState(false);
   const [avaliacaoFoto, setAvaliacaoFoto] = useState<string | null>(null);
-  const [aAvaliarFoto, setAAvaliarFoto] = useState(false);
-  const [certificacoes, setCertificacoes] = useState<
-    { equip: string; situacao: string; nota: string }[]
-  >([]);
-  const [aVerificarCert, setAVerificarCert] = useState(false);
+  const [certificacoes, setCertificacoes] = useState<Certificacao[]>([]);
   const [checklist, setChecklist] = useState(CHECKLIST_AUTO.map((label) => ({ label, ok: true })));
   const [aGuardar, setAGuardar] = useState(false);
   const [logoAutoridade, setLogoAutoridade] = useState<string | null>(null);
-
-  const autoridadeSel = form["autoridade"] ?? "psp";
-
-  useEffect(() => {
-    if (docTipo !== "comunicacao") return;
-    try {
-      setLogoAutoridade(localStorage.getItem(`brasao:${autoridadeSel}`));
-    } catch {
-      setLogoAutoridade(null);
-    }
-  }, [docTipo, autoridadeSel]);
-
-  async function aoEscolherBrasao(file: File) {
-    try {
-      const dataUrl = await comprimirImagem(file, 400, 0.9);
-      setLogoAutoridade(dataUrl);
-      try {
-        localStorage.setItem(`brasao:${autoridadeSel}`, dataUrl);
-      } catch {
-        /* espaço local cheio — brasão fica só nesta sessão */
-      }
-      toast.success("Brasão carregado");
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  }
-
-  async function aoEscolherFoto(file: File) {
-    try {
-      setAComprimirFoto(true);
-      const dataUrl = await comprimirImagem(file);
-      setFoto(dataUrl);
-      setAvaliacaoFoto(null);
-      toast.success("Foto pronta");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setAComprimirFoto(false);
-    }
-  }
-
-  async function pedirAvaliacaoFoto() {
-    if (!foto) return;
-    try {
-      setAAvaliarFoto(true);
-      const { texto } = await avaliarFoto({ data: { fotoDataUrl: foto } });
-      setAvaliacaoFoto(texto);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setAAvaliarFoto(false);
-    }
-  }
-
-  async function pedirVerificacaoCertificacoes() {
-    const lista = equipamentos.data ?? [];
-    if (!lista.length) {
-      toast.error("Sem equipamento para verificar");
-      return;
-    }
-    try {
-      setAVerificarCert(true);
-      const res = await verificarCertificacoes({
-        data: { equipamentos: lista.map((e) => ({ equip: e.equip, marca: e.marca ?? "" })) },
-      });
-      setCertificacoes(res);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setAVerificarCert(false);
-    }
-  }
 
   const empresa = useQuery({ queryKey: ["empresa"], queryFn: fetchEmpresa });
   const instalacao = useQuery({
@@ -215,16 +128,20 @@ function Gerar() {
     return lista;
   }, [checklist, certificacoes, foto, avaliacaoFoto]);
 
+  const dadosDoc = {
+    empresa: empresa.data ?? null,
+    cliente: cliente.data ?? null,
+    instalacao: instalacao.data ?? null,
+    equipamentos: equipamentos.data ?? [],
+    intervencoes: intervencoes.data ?? [],
+  };
+
   const html = useMemo(
     () =>
       buildDocumentHtml({
         tipo: docTipo,
         numero: "(atribuído ao guardar)",
-        empresa: empresa.data ?? null,
-        cliente: cliente.data ?? null,
-        instalacao: instalacao.data ?? null,
-        equipamentos: equipamentos.data ?? [],
-        intervencoes: intervencoes.data ?? [],
+        ...dadosDoc,
         form,
         checklist,
         assinatura,
@@ -252,6 +169,8 @@ function Gerar() {
     ],
   );
 
+  const definirLogo = useCallback((v: string | null) => setLogoAutoridade(v), []);
+
   async function guardar(comoRascunho = false) {
     try {
       setAGuardar(true);
@@ -260,11 +179,7 @@ function Gerar() {
       const finalHtml = buildDocumentHtml({
         tipo: docTipo,
         numero,
-        empresa: empresa.data ?? null,
-        cliente: cliente.data ?? null,
-        instalacao: instalacao.data ?? null,
-        equipamentos: equipamentos.data ?? [],
-        intervencoes: intervencoes.data ?? [],
+        ...dadosDoc,
         form,
         checklist,
         assinatura,
@@ -303,11 +218,8 @@ function Gerar() {
           /* o arquivo é complementar; o documento já ficou guardado */
         }
       }
-      toast.success(
-        comoRascunho ? `Rascunho ${numero} guardado` : `Documento ${numero} criado`,
-      );
+      toast.success(comoRascunho ? `Rascunho ${numero} guardado` : `Documento ${numero} criado`);
       navigate({ to: "/documentos/$documentoId", params: { documentoId: data.id } });
-
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -323,9 +235,7 @@ function Gerar() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() =>
-              navigate({ to: "/instalacoes/$instalacaoId", params: { instalacaoId } })
-            }
+            onClick={() => navigate({ to: "/instalacoes/$instalacaoId", params: { instalacaoId } })}
           >
             <ArrowLeft className="h-4 w-4" /> Voltar
           </Button>
@@ -337,253 +247,38 @@ function Gerar() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          {agrupar(CAMPOS_DOC[docTipo] ?? []).map(({ grupo, campos }) => (
-            <Card key={grupo}>
-              <CardHeader>
-                <CardTitle>{grupo}</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2">
-
-                {campos.map((c) => (
-                  <div
-                    key={c.nome}
-                    className={`space-y-2 ${c.tipo === "area" ? "sm:col-span-2" : ""}`}
-                  >
-                    <Label htmlFor={c.nome}>{c.label}</Label>
-                    {c.tipo === "area" ? (
-                      <Textarea
-                        id={c.nome}
-                        rows={3}
-                        value={form[c.nome] ?? ""}
-                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
-                      />
-                    ) : (
-                      <Input
-                        id={c.nome}
-                        type={c.tipo === "date" ? "date" : c.tipo === "time" ? "time" : "text"}
-                        value={form[c.nome] ?? ""}
-                        onChange={(e) => setForm((f) => ({ ...f, [c.nome]: e.target.value }))}
-                      />
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-
+          <CamposDocumento campos={CAMPOS_DOC[docTipo] ?? []} form={form} setForm={setForm} />
 
           {docTipo === "comunicacao" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Autoridade e características</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="autoridade">Autoridade da zona</Label>
-                  <Select
-                    value={form["autoridade"] ?? "psp"}
-                    onValueChange={(v) => setForm((f) => ({ ...f, autoridade: v }))}
-                  >
-                    <SelectTrigger id="autoridade">
-                      <SelectValue placeholder="Escolhe a autoridade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AUTORIDADES.map((a) => (
-                        <SelectItem key={a.valor} value={a.valor}>
-                          {a.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="brasao">Brasão oficial da autoridade (opcional)</Label>
-                  <div className="flex items-center gap-3">
-                    {logoAutoridade && (
-                      <img
-                        src={logoAutoridade}
-                        alt="Brasão da autoridade"
-                        className="h-12 w-12 rounded border border-border object-contain"
-                      />
-                    )}
-                    <Input
-                      id="brasao"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void aoEscolherBrasao(file);
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Carrega a imagem do brasão oficial (PSP ou GNR) para aparecer no cabeçalho. Fica
-                    guardada neste dispositivo e é reutilizada nos próximos formulários.
-                  </p>
-                </div>
-                {([
-                  ["sirene", "Alarme com sirene audível do exterior"],
-                  ["panico", "Botão de pânico"],
-                  ["juntaDeclaracao", "Junta cópia da declaração de instalação"],
-                ] as [string, string][]).map(([campo, label]) => (
-                  <label key={campo} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={form[campo] === "sim"}
-                      onCheckedChange={(v) =>
-                        setForm((f) => ({ ...f, [campo]: v === true ? "sim" : "" }))
-                      }
-                    />
-                    {label}
-                  </label>
-                ))}
-              </CardContent>
-            </Card>
+            <BlocoComunicacao form={form} setForm={setForm} onLogo={definirLogo} />
           )}
 
           {docTipo === "auto" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Checklist</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {checklist.map((c, i) => (
-                  <label key={c.label} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={c.ok}
-                      onCheckedChange={(v) =>
-                        setChecklist((prev) =>
-                          prev.map((x, n) => (n === i ? { ...x, ok: v === true } : x)),
-                        )
-                      }
-                    />
-                    {c.label}
-                  </label>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {docTipo === "auto" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Fotografia do local / sistema</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={aComprimirFoto}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void aoEscolherFoto(f);
-                    e.target.value = "";
-                  }}
+            <>
+              <BlocoChecklist checklist={checklist} setChecklist={setChecklist} />
+              <BlocoFoto
+                foto={foto}
+                setFoto={setFoto}
+                avaliacao={avaliacaoFoto}
+                setAvaliacao={setAvaliacaoFoto}
+              />
+              {(equipamentos.data?.length ?? 0) > 0 && (
+                <BlocoCertificacoes
+                  equipamentos={equipamentos.data ?? []}
+                  certificacoes={certificacoes}
+                  setCertificacoes={setCertificacoes}
                 />
-                {foto && (
-                  <div className="space-y-2">
-                    <img
-                      src={foto}
-                      alt="Pré-visualização da foto do local"
-                      className="max-h-48 rounded-md border border-border"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={aAvaliarFoto}
-                        onClick={pedirAvaliacaoFoto}
-                      >
-                        {aAvaliarFoto ? "A avaliar…" : "Pedir avaliação à IA"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setFoto(null);
-                          setAvaliacaoFoto(null);
-                        }}
-                      >
-                        Remover foto
-                      </Button>
-                    </div>
-                    {avaliacaoFoto && (
-                      <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
-                        {avaliacaoFoto}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+              {pendencias.length > 0 && <BlocoPendencias pendencias={pendencias} />}
+            </>
           )}
 
-          {docTipo === "auto" && (equipamentos.data?.length ?? 0) > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Certificações do equipamento</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  A IA verifica com base no seu conhecimento geral (sem acesso à internet em tempo
-                  real) — confirma sempre com a ficha técnica do fabricante.
-                </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={aVerificarCert}
-                  onClick={pedirVerificacaoCertificacoes}
-                >
-                  {aVerificarCert ? "A verificar…" : "Verificar certificações (IA)"}
-                </Button>
-                {certificacoes.length > 0 && (
-                  <ul className="space-y-1 text-sm">
-                    {certificacoes.map((c) => (
-                      <li
-                        key={c.equip}
-                        className={c.situacao === "confirmado" ? "text-green-700" : "text-red-700"}
-                      >
-                        {c.situacao === "confirmado" ? "✔" : "✘"} {c.equip} — {c.nota}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {docTipo === "auto" && pendencias.length > 0 && (
-            <Card className="border-amber-300 bg-amber-50">
-              <CardHeader>
-                <CardTitle className="text-amber-900">⚠ Por confirmar antes de entregar</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
-                  {pendencias.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Identificação de quem assina</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {CAMPOS_ASSINANTE.map(({ nome, label }) => (
-                <div key={nome} className="space-y-2">
-                  <Label htmlFor={nome}>{label}</Label>
-                  <Input
-                    id={nome}
-                    value={form[nome] ?? ""}
-                    onChange={(e) => setForm((f) => ({ ...f, [nome]: e.target.value }))}
-                  />
-                </div>
-              ))}
-              <SignaturePad value={assinatura} onChange={setAssinatura} />
-            </CardContent>
-          </Card>
+          <BlocoAssinatura
+            form={form}
+            setForm={setForm}
+            assinatura={assinatura}
+            setAssinatura={setAssinatura}
+          />
         </div>
 
         <div className="hidden overflow-x-auto rounded-md bg-white p-4 lg:block">
@@ -591,9 +286,7 @@ function Gerar() {
         </div>
 
         <details className="rounded-md border border-border bg-card p-3 lg:hidden">
-          <summary className="cursor-pointer text-sm font-medium">
-            Pré-visualizar documento
-          </summary>
+          <summary className="cursor-pointer text-sm font-medium">Pré-visualizar documento</summary>
           <div className="mt-3 overflow-x-auto rounded-md bg-white p-2">
             <div dangerouslySetInnerHTML={{ __html: html }} />
           </div>
@@ -615,6 +308,5 @@ function Gerar() {
         </Button>
       </div>
     </div>
-
   );
 }
