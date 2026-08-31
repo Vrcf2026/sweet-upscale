@@ -3,10 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SignaturePad } from "@/components/SignaturePad";
-import { CAMPOS_ASSINANTE, agrupar, type CampoDoc } from "@/lib/campos";
+import { CAMPOS_ASSINANTE, agrupar, type Campo } from "@/lib/campos";
 
 type Props = {
-  campos: CampoDoc[];
+  campos: Campo[];
   form: Record<string, string>;
   setForm: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 };
