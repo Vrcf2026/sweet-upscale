@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Image as ImageIcon, Lock, Printer } from "lucide-react";
+import { Download, Image as ImageIcon, Lock, Mail, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ApagarDialog } from "@/components/ApagarDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchDocumento } from "@/lib/data";
+import { fetchCliente, fetchDocumento, fetchEmpresa } from "@/lib/data";
 import { DOC_LABEL, ESTADO_LABEL, type Documento, type DocTipo } from "@/lib/model";
 import { exportarPdf, imprimirDoc } from "@/lib/ficheiros";
 import { arquivarDocumento } from "@/lib/arquivo";
@@ -40,6 +40,44 @@ function DocumentoPage() {
   });
 
   const doc = data as (Documento & { hash?: string | null; ficheiro_path?: string | null }) | null;
+
+  const cliente = useQuery({
+    queryKey: ["cliente", doc?.cliente_id],
+    queryFn: () => fetchCliente(doc!.cliente_id!),
+    enabled: !!doc?.cliente_id,
+  });
+  const empresa = useQuery({ queryKey: ["empresa"], queryFn: fetchEmpresa });
+
+  /**
+   * Envio ao cliente: gera o PDF (para anexar) e abre o email já preenchido
+   * no programa de correio do técnico, registando o envio na auditoria.
+   */
+  async function enviarPorEmail() {
+    if (!doc) return;
+    const email = cliente.data?.email ?? "";
+    if (!email) {
+      toast.error("O cliente não tem email preenchido na ficha");
+      return;
+    }
+    imprimirDoc(doc.html, doc.numero ?? "documento");
+    const assunto = `${DOC_LABEL[doc.tipo as DocTipo]} ${doc.numero ?? ""}`.trim();
+    const corpo = [
+      `Exmo(a). Sr(a). ${cliente.data?.nome ?? ""},`,
+      "",
+      `Segue em anexo o documento ${assunto}.`,
+      doc.hash ? `Impressão digital do documento: ${doc.hash}` : "",
+      "",
+      "Com os melhores cumprimentos,",
+      empresa.data?.nome ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(
+      assunto,
+    )}&body=${encodeURIComponent(corpo)}`;
+    await registar("documento", "enviou", doc.id, `Documento ${doc.numero ?? ""} enviado para ${email}`);
+    toast.success("Email preparado — anexa o PDF que acabou de ser gerado");
+  }
 
   const mudarEstado = useMutation({
     mutationFn: async (estado: Documento["estado"]) => {
@@ -119,6 +157,9 @@ function DocumentoPage() {
             onClick={() => ref.current && exportarPdf(ref.current, `${doc.numero ?? "documento"}`)}
           >
             <ImageIcon className="h-4 w-4" /> PDF (imagem)
+          </Button>
+          <Button size="sm" variant="secondary" onClick={enviarPorEmail}>
+            <Mail className="h-4 w-4" /> Enviar ao cliente
           </Button>
           <Button size="sm" variant="secondary" disabled={aArquivar} onClick={arquivarAgora}>
             <Download className="h-4 w-4" /> Arquivar
