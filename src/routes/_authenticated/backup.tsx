@@ -122,11 +122,8 @@ function BackupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Button onClick={() => exportar("json")} disabled={aExportar}>
+          <Button onClick={() => exportar()} disabled={aExportar}>
             <Download className="h-4 w-4" /> Backup completo (JSON)
-          </Button>
-          <Button variant="secondary" onClick={() => exportar("csv")} disabled={aExportar}>
-            <Download className="h-4 w-4" /> Tabelas (CSV)
           </Button>
         </CardContent>
       </Card>
