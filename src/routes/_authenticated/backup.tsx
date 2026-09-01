@@ -38,13 +38,6 @@ function descarregar(nome: string, conteudo: string, tipo: string) {
   URL.revokeObjectURL(url);
 }
 
-function csv(linhas: Record<string, unknown>[]) {
-  if (!linhas.length) return "";
-  const cols = Object.keys(linhas[0]!);
-  const cel = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  return [cols.join(","), ...linhas.map((l) => cols.map((c) => cel(l[c])).join(","))].join("\n");
-}
-
 function BackupPage() {
   const [aExportar, setAExportar] = useState(false);
   const [aEnviar, setAEnviar] = useState(false);
