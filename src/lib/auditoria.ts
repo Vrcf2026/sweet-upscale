@@ -11,7 +11,7 @@ export type Auditoria = {
   created_at: string;
 };
 
-export type Accao = "criou" | "alterou" | "apagou" | "gerou" | "estado" | "arquivou";
+export type Accao = "criou" | "alterou" | "apagou" | "gerou" | "estado" | "arquivou" | "enviou";
 
 export const ACCAO_LABEL: Record<Accao, string> = {
   criou: "Criou",
@@ -20,6 +20,7 @@ export const ACCAO_LABEL: Record<Accao, string> = {
   gerou: "Gerou",
   estado: "Mudou estado",
   arquivou: "Arquivou",
+  enviou: "Enviou ao cliente",
 };
 
 /** Regista uma ação no trilho de auditoria. Nunca quebra a operação principal. */
