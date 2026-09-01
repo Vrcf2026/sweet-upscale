@@ -5,7 +5,15 @@ import { AlertTriangle, Building2, FileText, Search, Users } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { fetchClientes, fetchDocumentos, fetchInstalacoes } from "@/lib/data";
+import {
+  fetchClientes,
+  fetchDocumentos,
+  fetchEquipamentosTodos,
+  fetchInstalacoes,
+  fetchIntervencoesTodas,
+} from "@/lib/data";
+import { listarBackups } from "@/lib/backup.functions";
+import { useRole } from "@/hooks/useRole";
 import { DOC_LABEL, ESTADO_LABEL, type DocTipo } from "@/lib/model";
 import { dataPT } from "@/lib/docs";
 
@@ -23,9 +31,38 @@ export const Route = createFileRoute("/_authenticated/painel")({
 
 function Painel() {
   const [termo, setTermo] = useState("");
+  const { isSuperadmin } = useRole();
   const clientes = useQuery({ queryKey: ["clientes"], queryFn: fetchClientes });
   const instalacoes = useQuery({ queryKey: ["instalacoes"], queryFn: () => fetchInstalacoes() });
   const documentos = useQuery({ queryKey: ["documentos"], queryFn: () => fetchDocumentos() });
+  const equipamentos = useQuery({
+    queryKey: ["equipamentos", "todos"],
+    queryFn: fetchEquipamentosTodos,
+  });
+  const intervencoes = useQuery({
+    queryKey: ["intervencoes", "todas"],
+    queryFn: fetchIntervencoesTodas,
+  });
+  const backups = useQuery({
+    queryKey: ["backups"],
+    queryFn: () => listarBackups(),
+    enabled: isSuperadmin,
+  });
+
+  /** Aviso quando o último backup falhou ou já passou mais de 48h. */
+  const alertaBackup = useMemo(() => {
+    if (!isSuperadmin || !backups.data) return null;
+    const ultimoOk = backups.data.find((b) => b.estado === "ok");
+    if (!ultimoOk) return "Ainda não existe nenhum backup concluído com sucesso.";
+    const horas = (Date.now() - new Date(ultimoOk.created_at).getTime()) / 36e5;
+    if (horas > 48) {
+      return `O último backup bem-sucedido foi há ${Math.round(horas)} horas — verifica a ligação à Drive.`;
+    }
+    if (backups.data[0] && backups.data[0].estado !== "ok") {
+      return `O backup mais recente falhou: ${backups.data[0].erro ?? "erro desconhecido"}`;
+    }
+    return null;
+  }, [isSuperadmin, backups.data]);
 
   const t = termo.trim().toLowerCase();
   const resultados = useMemo(() => {
@@ -46,8 +83,16 @@ function Painel() {
           (v ?? "").toLowerCase().includes(t),
         ),
       ),
+      equipamentos: (equipamentos.data ?? []).filter((e) =>
+        [e.equip, e.marca, e.serie, e.local].some((v) => (v ?? "").toLowerCase().includes(t)),
+      ),
+      intervencoes: (intervencoes.data ?? []).filter((i) =>
+        [i.num_relatorio, i.tipo, i.causa, i.trabalhos, i.tecnico].some((v) =>
+          (v ?? "").toLowerCase().includes(t),
+        ),
+      ),
     };
-  }, [t, clientes.data, instalacoes.data, documentos.data]);
+  }, [t, clientes.data, instalacoes.data, documentos.data, equipamentos.data, intervencoes.data]);
 
   const manutencoes = useMemo(() => {
     const limite = new Date();
@@ -115,6 +160,38 @@ function Painel() {
               </Link>
             ))}
           </Bloco>
+          <Bloco titulo="Equipamento (n.º de série)">
+            {resultados.equipamentos.map((e) => (
+              <Link
+                key={e.id}
+                to="/instalacoes/$instalacaoId"
+                params={{ instalacaoId: e.instalacao_id }}
+                className="block rounded-md border border-border bg-card p-3 hover:border-accent"
+              >
+                <span className="font-medium">{e.equip}</span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {[e.marca, e.serie, e.local].filter(Boolean).join(" · ")}
+                </span>
+              </Link>
+            ))}
+          </Bloco>
+          <Bloco titulo="Intervenções">
+            {resultados.intervencoes.map((i) => (
+              <Link
+                key={i.id}
+                to="/instalacoes/$instalacaoId"
+                params={{ instalacaoId: i.instalacao_id }}
+                className="block rounded-md border border-border bg-card p-3 hover:border-accent"
+              >
+                <span className="font-medium">
+                  {dataPT(i.data)} {i.tipo}
+                </span>
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {[i.num_relatorio, i.tecnico].filter(Boolean).join(" · ")}
+                </span>
+              </Link>
+            ))}
+          </Bloco>
         </div>
       ) : (
         <>
@@ -133,6 +210,19 @@ function Painel() {
               to="/documentos"
             />
           </div>
+
+          {alertaBackup && (
+            <Link to="/backup" className="block">
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" /> Backup por verificar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">{alertaBackup}</CardContent>
+              </Card>
+            </Link>
+          )}
 
           {manutencoes.length > 0 && (
             <Card className="border-accent">
