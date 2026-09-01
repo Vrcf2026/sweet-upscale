@@ -91,40 +91,12 @@ function BackupPage() {
     };
   }
 
-  async function exportar(formato: "json" | "csv") {
+  async function exportar() {
     try {
       setAExportar(true);
       const dados = await recolher();
       const hoje = new Date().toISOString().slice(0, 10);
-      if (formato === "json") {
-        descarregar(`backup-${hoje}.json`, JSON.stringify(dados, null, 2), "application/json");
-      } else {
-        const partes = [
-          "# CLIENTES",
-          csv(dados.clientes as unknown as Record<string, unknown>[]),
-          "",
-          "# INSTALACOES",
-          csv(dados.instalacoes as unknown as Record<string, unknown>[]),
-          "",
-          "# EQUIPAMENTOS",
-          csv(dados.equipamentos as unknown as Record<string, unknown>[]),
-          "",
-          "# INTERVENCOES",
-          csv(dados.intervencoes as unknown as Record<string, unknown>[]),
-          "",
-          "# DOCUMENTOS",
-          csv(
-            dados.documentos.map((d) => ({
-              numero: d.numero,
-              tipo: d.tipo,
-              estado: d.estado,
-              resumo: d.resumo,
-              created_at: d.created_at,
-            })),
-          ),
-        ];
-        descarregar(`backup-${hoje}.csv`, partes.join("\n"), "text/csv;charset=utf-8");
-      }
+      descarregar(`backup-${hoje}.json`, JSON.stringify(dados, null, 2), "application/json");
       toast.success("Backup descarregado");
     } catch (e) {
       toast.error((e as Error).message);
