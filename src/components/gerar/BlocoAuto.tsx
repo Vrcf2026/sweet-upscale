@@ -74,6 +74,8 @@ export function BlocoFoto({
       setAComprimir(true);
       setFoto(await comprimirImagem(file));
       setAvaliacao(null);
+      setDetalhe(null);
+
       toast.success("Foto pronta");
     } catch (e) {
       toast.error((e as Error).message);
