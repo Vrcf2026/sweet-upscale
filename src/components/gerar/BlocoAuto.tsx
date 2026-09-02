@@ -66,6 +66,8 @@ export function BlocoFoto({
 }) {
   const [aComprimir, setAComprimir] = useState(false);
   const [aAvaliar, setAAvaliar] = useState(false);
+  const [detalhe, setDetalhe] = useState<AvaliacaoRgpd | null>(null);
+
 
   async function escolher(file: File) {
     try {
