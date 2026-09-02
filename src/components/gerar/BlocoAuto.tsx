@@ -5,10 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { comprimirImagem } from "@/lib/ficheiros";
-import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
+import { avaliarFoto, verificarCertificacoes, type AvaliacaoRgpd } from "@/lib/ia.functions";
 
 export type ItemChecklist = { label: string; ok: boolean };
 export type Certificacao = { equip: string; situacao: string; nota: string };
+
+const VEREDICTOS: Record<AvaliacaoRgpd["veredicto"], { label: string; classe: string }> = {
+  conforme: { label: "Sem problemas visíveis", classe: "bg-emerald-100 text-emerald-800" },
+  atencao: { label: "Pontos a rever", classe: "bg-amber-100 text-amber-900" },
+  risco: { label: "Risco de incumprimento", classe: "bg-destructive/15 text-destructive" },
+  indeterminado: { label: "Indeterminado", classe: "bg-muted-foreground/15 text-muted-foreground" },
+};
+const NIVEL_LABEL = { ok: "OK", atencao: "Atenção", risco: "Risco" } as const;
+const NIVEL_COR = {
+  ok: "text-emerald-700",
+  atencao: "text-amber-700",
+  risco: "text-destructive",
+} as const;
+
 
 export function BlocoChecklist({
   checklist,
