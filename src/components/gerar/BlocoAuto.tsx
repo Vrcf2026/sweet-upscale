@@ -70,8 +70,15 @@ export function BlocoFoto({
     if (!foto) return;
     try {
       setAAvaliar(true);
-      const { texto } = await avaliarFoto({ data: { fotoDataUrl: foto } });
-      setAvaliacao(texto);
+      const r = await avaliarFoto({ data: { fotoDataUrl: foto } });
+      setDetalhe(r);
+      const linhas = [
+        `Veredicto RGPD: ${VEREDICTOS[r.veredicto].label}`,
+        r.resumo,
+        ...r.pontos.map((p) => `- [${NIVEL_LABEL[p.nivel]}] ${p.titulo}: ${p.nota}`),
+        ...(r.recomendacoes.length ? ["Recomendações:", ...r.recomendacoes.map((x) => `- ${x}`)] : []),
+      ].filter(Boolean);
+      setAvaliacao(linhas.join("\n"));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -104,7 +111,7 @@ export function BlocoFoto({
             />
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" disabled={aAvaliar} onClick={pedirAvaliacao}>
-                {aAvaliar ? "A avaliar…" : "Pedir avaliação à IA"}
+                {aAvaliar ? "A analisar…" : "Analisar conformidade RGPD"}
               </Button>
               <Button
                 variant="ghost"
@@ -112,13 +119,58 @@ export function BlocoFoto({
                 onClick={() => {
                   setFoto(null);
                   setAvaliacao(null);
+                  setDetalhe(null);
                 }}
               >
                 Remover foto
               </Button>
             </div>
-            {avaliacao && (
-              <p className="rounded-md border border-border bg-muted p-3 text-sm">{avaliacao}</p>
+            {detalhe ? (
+              <div className="space-y-3 rounded-md border border-border bg-muted p-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${VEREDICTOS[detalhe.veredicto].classe}`}
+                  >
+                    {VEREDICTOS[detalhe.veredicto].label}
+                  </span>
+                </div>
+                {detalhe.resumo && <p>{detalhe.resumo}</p>}
+                {detalhe.pontos.length > 0 && (
+                  <ul className="space-y-1">
+                    {detalhe.pontos.map((p, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className={`shrink-0 font-medium ${NIVEL_COR[p.nivel]}`}>
+                          {NIVEL_LABEL[p.nivel]}
+                        </span>
+                        <span>
+                          <strong>{p.titulo}</strong>
+                          {p.nota ? ` — ${p.nota}` : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {detalhe.recomendacoes.length > 0 && (
+                  <div>
+                    <p className="font-medium">Recomendações</p>
+                    <ul className="list-disc pl-5">
+                      {detalhe.recomendacoes.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Apreciação automática de apoio, baseada apenas na imagem. Não substitui a avaliação
+                  do responsável pelo tratamento nem uma avaliação de impacto (AIPD).
+                </p>
+              </div>
+            ) : (
+              avaliacao && (
+                <p className="whitespace-pre-line rounded-md border border-border bg-muted p-3 text-sm">
+                  {avaliacao}
+                </p>
+              )
             )}
           </div>
         )}
@@ -126,6 +178,7 @@ export function BlocoFoto({
     </Card>
   );
 }
+
 
 export function BlocoCertificacoes({
   equipamentos,
