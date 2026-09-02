@@ -367,6 +367,7 @@ export type Database = {
           estado: string
           id: string
           instalado_por: string | null
+          lembrete_enviado_em: string | null
           localidade: string | null
           monitorizado_por: string | null
           morada: string | null
@@ -389,6 +390,7 @@ export type Database = {
           estado?: string
           id?: string
           instalado_por?: string | null
+          lembrete_enviado_em?: string | null
           localidade?: string | null
           monitorizado_por?: string | null
           morada?: string | null
@@ -411,6 +413,7 @@ export type Database = {
           estado?: string
           id?: string
           instalado_por?: string | null
+          lembrete_enviado_em?: string | null
           localidade?: string | null
           monitorizado_por?: string | null
           morada?: string | null

@@ -27,9 +27,11 @@ const hoje = () => new Date().toISOString().slice(0, 10);
 export function Intervencoes({
   instalacaoId,
   lista,
+  periodicidadeMeses,
 }: {
   instalacaoId: string;
   lista: IntervRow[];
+  periodicidadeMeses?: number | null | undefined;
 }) {
   const queryClient = useQueryClient();
   const [nova, setNova] = useState({
@@ -42,8 +44,11 @@ export function Intervencoes({
     tecnico: "",
   });
 
-  const invalidar = () =>
+  const invalidar = () => {
     queryClient.invalidateQueries({ queryKey: ["intervencoes", instalacaoId] });
+    queryClient.invalidateQueries({ queryKey: ["instalacao", instalacaoId] });
+    queryClient.invalidateQueries({ queryKey: ["instalacoes"] });
+  };
 
   const criar = useMutation({
     mutationFn: async () => {
@@ -52,9 +57,28 @@ export function Intervencoes({
         .from("intervencoes")
         .insert({ ...nova, instalacao_id: instalacaoId, user_id });
       if (error) throw new Error(error.message);
+
+      /** Manutenção efetuada: recalcula a próxima data automaticamente. */
+      if (/manut/i.test(nova.tipo)) {
+        const proxima = new Date(`${nova.data}T00:00:00`);
+        proxima.setMonth(proxima.getMonth() + (periodicidadeMeses || 12));
+        const { error: erroProx } = await supabase
+          .from("instalacoes")
+          .update({
+            proxima_manutencao: proxima.toISOString().slice(0, 10),
+            lembrete_enviado_em: null,
+          })
+          .eq("id", instalacaoId);
+        if (erroProx) throw new Error(erroProx.message);
+      }
     },
     onSuccess: () => {
-      toast.success("Intervenção registada");
+      const foiManutencao = /manut/i.test(nova.tipo);
+      toast.success(
+        foiManutencao
+          ? "Intervenção registada — próxima manutenção recalculada automaticamente"
+          : "Intervenção registada",
+      );
       setNova({ ...nova, causa: "", trabalhos: "", hora: "" });
       invalidar();
     },
@@ -107,6 +131,10 @@ export function Intervencoes({
             value={nova.tipo}
             onChange={(e) => setNova({ ...nova, tipo: e.target.value })}
           />
+          <p className="text-xs text-muted-foreground sm:col-span-2 sm:-mt-2">
+            Se o tipo contiver "manutenção", a próxima data de manutenção é recalculada
+            automaticamente a partir desta data.
+          </p>
           <Input
             placeholder="Modo de deteção"
             value={nova.modo}

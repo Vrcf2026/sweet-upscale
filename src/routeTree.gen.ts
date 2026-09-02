@@ -25,6 +25,7 @@ import { Route as AuthenticatedDocumentosDocumentoIdRouteImport } from './routes
 import { Route as AuthenticatedInstalacoesIndexRouteImport } from './routes/_authenticated/instalacoes.index'
 import { Route as AuthenticatedInstalacoesInstalacaoIdRouteImport } from './routes/_authenticated/instalacoes.$instalacaoId'
 import { Route as ApiPublicBackupDiarioRouteImport } from './routes/api/public/backup-diario'
+import { Route as ApiPublicManutencoesDiarioRouteImport } from './routes/api/public/manutencoes-diario'
 import { Route as AuthenticatedGerarInstalacaoIdTipoRouteImport } from './routes/_authenticated/gerar.$instalacaoId.$tipo'
 
 const IndexRoute = IndexRouteImport.update({
@@ -113,6 +114,12 @@ const ApiPublicBackupDiarioRoute = ApiPublicBackupDiarioRouteImport.update({
   path: '/api/public/backup-diario',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicManutencoesDiarioRoute =
+  ApiPublicManutencoesDiarioRouteImport.update({
+    id: '/api/public/manutencoes-diario',
+    path: '/api/public/manutencoes-diario',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedGerarInstalacaoIdTipoRoute =
   AuthenticatedGerarInstalacaoIdTipoRouteImport.update({
     id: '/gerar/$instalacaoId/$tipo',
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/api/public/backup-diario': typeof ApiPublicBackupDiarioRoute
+  '/api/public/manutencoes-diario': typeof ApiPublicManutencoesDiarioRoute
   '/clientes/': typeof AuthenticatedClientesIndexRoute
   '/documentos/': typeof AuthenticatedDocumentosIndexRoute
   '/instalacoes/': typeof AuthenticatedInstalacoesIndexRoute
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/api/public/backup-diario': typeof ApiPublicBackupDiarioRoute
+  '/api/public/manutencoes-diario': typeof ApiPublicManutencoesDiarioRoute
   '/clientes': typeof AuthenticatedClientesIndexRoute
   '/documentos': typeof AuthenticatedDocumentosIndexRoute
   '/instalacoes': typeof AuthenticatedInstalacoesIndexRoute
@@ -171,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/documentos/$documentoId': typeof AuthenticatedDocumentosDocumentoIdRoute
   '/_authenticated/instalacoes/$instalacaoId': typeof AuthenticatedInstalacoesInstalacaoIdRoute
   '/api/public/backup-diario': typeof ApiPublicBackupDiarioRoute
+  '/api/public/manutencoes-diario': typeof ApiPublicManutencoesDiarioRoute
   '/_authenticated/clientes/': typeof AuthenticatedClientesIndexRoute
   '/_authenticated/documentos/': typeof AuthenticatedDocumentosIndexRoute
   '/_authenticated/instalacoes/': typeof AuthenticatedInstalacoesIndexRoute
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/documentos/$documentoId'
     | '/instalacoes/$instalacaoId'
     | '/api/public/backup-diario'
+    | '/api/public/manutencoes-diario'
     | '/clientes/'
     | '/documentos/'
     | '/instalacoes/'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/documentos/$documentoId'
     | '/instalacoes/$instalacaoId'
     | '/api/public/backup-diario'
+    | '/api/public/manutencoes-diario'
     | '/clientes'
     | '/documentos'
     | '/instalacoes'
@@ -228,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documentos/$documentoId'
     | '/_authenticated/instalacoes/$instalacaoId'
     | '/api/public/backup-diario'
+    | '/api/public/manutencoes-diario'
     | '/_authenticated/clientes/'
     | '/_authenticated/documentos/'
     | '/_authenticated/instalacoes/'
@@ -240,6 +253,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicBackupDiarioRoute: typeof ApiPublicBackupDiarioRoute
+  ApiPublicManutencoesDiarioRoute: typeof ApiPublicManutencoesDiarioRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -356,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBackupDiarioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/manutencoes-diario': {
+      id: '/api/public/manutencoes-diario'
+      path: '/api/public/manutencoes-diario'
+      fullPath: '/api/public/manutencoes-diario'
+      preLoaderRoute: typeof ApiPublicManutencoesDiarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/gerar/$instalacaoId/$tipo': {
       id: '/_authenticated/gerar/$instalacaoId/$tipo'
       path: '/gerar/$instalacaoId/$tipo'
@@ -408,6 +429,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicBackupDiarioRoute: ApiPublicBackupDiarioRoute,
+  ApiPublicManutencoesDiarioRoute: ApiPublicManutencoesDiarioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

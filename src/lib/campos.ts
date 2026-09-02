@@ -32,6 +32,10 @@ export const CAMPOS_DOC: Record<DocTipo, Campo[]> = {
     c("testes", "Testes efetuados", "area", "Auto"),
     c("observacoes", "Observações", "area", "Auto"),
   ],
+  verificacao: [
+    c("tecnico", "Técnico", "input", "Verificação"),
+    c("observacoes", "Observações", "area", "Verificação"),
+  ],
   comunicacao: [
     c("data", "Data", "date", "Autoridade"),
     c("subunidade", "Subunidade (esquadra / posto)", "input", "Autoridade"),

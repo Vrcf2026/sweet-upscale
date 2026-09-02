@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchClientes, fetchInstalacoes } from "@/lib/data";
 import { MoradaLink } from "@/components/MoradaLink";
 import { ListaFiltrada } from "@/components/ListaFiltrada";
+import { Badge } from "@/components/ui/badge";
+import { CONFORMIDADE_BADGE, CONFORMIDADE_LABEL, estadoConformidade } from "@/lib/conformidade";
 import type { Instalacao } from "@/lib/model";
 
 export const Route = createFileRoute("/_authenticated/instalacoes/")({
@@ -40,7 +42,14 @@ function InstalacoesPage() {
         render={(i) => (
           <div className="rounded-md border border-border p-3 hover:border-accent">
             <Link to="/instalacoes/$instalacaoId" params={{ instalacaoId: i.id }} className="block">
-              <div className="font-medium">{i.entidade || i.morada || "Instalação"}</div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="font-medium">{i.entidade || i.morada || "Instalação"}</div>
+                {estadoConformidade(i) !== "sem_dados" && (
+                  <Badge variant={CONFORMIDADE_BADGE[estadoConformidade(i)]}>
+                    {CONFORMIDADE_LABEL[estadoConformidade(i)]}
+                  </Badge>
+                )}
+              </div>
               <div className="text-sm text-muted-foreground">
                 {[nomeCliente(i.cliente_id), i.tipo_sistema, i.localidade]
                   .filter(Boolean)

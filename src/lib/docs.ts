@@ -90,20 +90,21 @@ const CSS = `
   .oficial .of-sign img { max-height:16mm; display:block; margin:0 auto -1mm; }
 `;
 
-const AUT_TEMA: Record<string, { cor: string; ministerio: string; forca: string; sigla: string }> = {
-  psp: {
-    cor: "#123a72",
-    ministerio: "Ministério da Administração Interna",
-    forca: "Polícia de Segurança Pública",
-    sigla: "PSP",
-  },
-  gnr: {
-    cor: "#14532d",
-    ministerio: "Ministério da Administração Interna",
-    forca: "Guarda Nacional Republicana",
-    sigla: "GNR",
-  },
-};
+const AUT_TEMA: Record<string, { cor: string; ministerio: string; forca: string; sigla: string }> =
+  {
+    psp: {
+      cor: "#123a72",
+      ministerio: "Ministério da Administração Interna",
+      forca: "Polícia de Segurança Pública",
+      sigla: "PSP",
+    },
+    gnr: {
+      cor: "#14532d",
+      ministerio: "Ministério da Administração Interna",
+      forca: "Guarda Nacional Republicana",
+      sigla: "GNR",
+    },
+  };
 
 function brasaoPlaceholder(cor: string, sigla: string) {
   return `<svg class="of-brasao" viewBox="0 0 100 100" role="img" aria-label="Brasão ${sigla}">
@@ -300,6 +301,21 @@ export function buildDocumentHtml(ctx: DocContext): string {
       ${assinaturas(ctx, "O instalador", "O cliente")}`;
   }
 
+  if (ctx.tipo === "verificacao") {
+    const chk = (ctx.checklist ?? [])
+      .map((c) => `<li>${c.ok ? "&#9745;" : "&#9744;"} ${esc(c.label)}</li>`)
+      .join("");
+    body = `${header(ctx, "Verificação Periódica")}
+      <div class="muted" style="margin-top:2mm">Documento de boa prática (não oficial) — confirmação de que o sistema continua a funcionar corretamente</div>
+      ${blocoPendencias(ctx)}
+      ${blocoCliente(ctx)}
+      <h2>Checklist de verificação</h2>
+      <ul class="chk">${chk}</ul>
+      <h2>Observações</h2>
+      <div>${esc(ctx.form["observacoes"] ?? "")}</div>
+      ${assinaturas(ctx, "O técnico", "O responsável pelo sistema")}`;
+  }
+
   let extraClass = "";
   let extraStyle = "";
 
@@ -418,4 +434,13 @@ export const CHECKLIST_AUTO = [
   "Informação de videovigilância afixada",
   "Prazo de retenção de imagens configurado",
   "Manual entregue ao cliente",
+];
+
+export const CHECKLIST_VERIFICACAO = [
+  "Sistema liga e comunica com a central / monitorização",
+  "Câmaras com imagem nítida e enquadramento correto",
+  "Bateria de emergência com carga normal",
+  "Sem avarias ou avisos ativos no sistema",
+  "Sinalética de videovigilância ainda visível",
+  "Registo de imagens dentro do prazo de retenção configurado",
 ];

@@ -14,7 +14,7 @@ import {
   getUserId,
   proximoNumero,
 } from "@/lib/data";
-import { buildDocumentHtml, CHECKLIST_AUTO } from "@/lib/docs";
+import { buildDocumentHtml, CHECKLIST_AUTO, CHECKLIST_VERIFICACAO } from "@/lib/docs";
 import { DOC_LABEL, type DocTipo } from "@/lib/model";
 import { CAMPOS_DOC } from "@/lib/campos";
 import { arquivarDocumento } from "@/lib/arquivo";
@@ -52,7 +52,12 @@ function Gerar() {
   const [foto, setFoto] = useState<string | null>(null);
   const [avaliacaoFoto, setAvaliacaoFoto] = useState<string | null>(null);
   const [certificacoes, setCertificacoes] = useState<Certificacao[]>([]);
-  const [checklist, setChecklist] = useState(CHECKLIST_AUTO.map((label) => ({ label, ok: true })));
+  const [checklist, setChecklist] = useState(
+    (tipo === "verificacao" ? CHECKLIST_VERIFICACAO : CHECKLIST_AUTO).map((label) => ({
+      label,
+      ok: true,
+    })),
+  );
   const [aGuardar, setAGuardar] = useState(false);
   const [logoAutoridade, setLogoAutoridade] = useState<string | null>(null);
 
@@ -251,6 +256,13 @@ function Gerar() {
 
           {docTipo === "comunicacao" && (
             <BlocoComunicacao form={form} setForm={setForm} onLogo={definirLogo} />
+          )}
+
+          {docTipo === "verificacao" && (
+            <>
+              <BlocoChecklist checklist={checklist} setChecklist={setChecklist} />
+              {pendencias.length > 0 && <BlocoPendencias pendencias={pendencias} />}
+            </>
           )}
 
           {docTipo === "auto" && (

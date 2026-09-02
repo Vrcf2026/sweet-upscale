@@ -66,7 +66,7 @@ const CAMPOS = [
   ["estado", "Estado da instalação"],
 ] as const;
 
-const TIPOS: DocTipo[] = ["relatorio", "livro", "declaracao", "auto"];
+const TIPOS: DocTipo[] = ["relatorio", "livro", "declaracao", "auto", "verificacao"];
 
 function InstalacaoDetalhe() {
   const { instalacaoId } = Route.useParams();
@@ -147,7 +147,7 @@ function InstalacaoDetalhe() {
       `Tem ${documentos.data!.length} documento(s) associado(s). Apaga primeiro os documentos.`,
     );
   if (instalacao.data && instalacao.data.estado !== "entregue")
-    bloqueios.push("A instalação tem de estar marcada como \"Entregue ao cliente\".");
+    bloqueios.push('A instalação tem de estar marcada como "Entregue ao cliente".');
 
   return (
     <div className="space-y-6">
@@ -293,7 +293,11 @@ function InstalacaoDetalhe() {
         </TabsContent>
 
         <TabsContent value="intervencoes">
-          <Intervencoes instalacaoId={instalacaoId} lista={intervencoes.data ?? []} />
+          <Intervencoes
+            instalacaoId={instalacaoId}
+            lista={intervencoes.data ?? []}
+            periodicidadeMeses={instalacao.data?.periodicidade_meses}
+          />
         </TabsContent>
       </Tabs>
     </div>

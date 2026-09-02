@@ -43,6 +43,7 @@ export type Instalacao = {
   monitorizado_por: string | null;
   periodicidade_meses: number | null;
   proxima_manutencao: string | null;
+  lembrete_enviado_em: string | null;
   estado: string;
   autoridade: string | null;
   autoridade_subunidade: string | null;
@@ -90,7 +91,7 @@ export const AUTORIDADES = [
   { valor: "gnr", label: "GNR — Guarda Nacional Republicana" },
 ] as const;
 
-export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto" | "comunicacao";
+export type DocTipo = "relatorio" | "livro" | "declaracao" | "auto" | "comunicacao" | "verificacao";
 
 export type Documento = {
   id: string;
@@ -112,6 +113,7 @@ export const DOC_LABEL: Record<DocTipo, string> = {
   declaracao: "Declaração de Instalação",
   auto: "Auto de Instalação",
   comunicacao: "Comunicação de Instalação de Alarme",
+  verificacao: "Verificação Periódica",
 };
 
 export const ESTADO_LABEL: Record<Documento["estado"], string> = {
