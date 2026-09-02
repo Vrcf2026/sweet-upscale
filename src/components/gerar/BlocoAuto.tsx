@@ -5,10 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { comprimirImagem } from "@/lib/ficheiros";
-import { avaliarFoto, verificarCertificacoes } from "@/lib/ia.functions";
+import { avaliarFoto, verificarCertificacoes, type AvaliacaoRgpd } from "@/lib/ia.functions";
 
 export type ItemChecklist = { label: string; ok: boolean };
 export type Certificacao = { equip: string; situacao: string; nota: string };
+
+const VEREDICTOS: Record<AvaliacaoRgpd["veredicto"], { label: string; classe: string }> = {
+  conforme: { label: "Sem problemas visíveis", classe: "bg-emerald-100 text-emerald-800" },
+  atencao: { label: "Pontos a rever", classe: "bg-amber-100 text-amber-900" },
+  risco: { label: "Risco de incumprimento", classe: "bg-destructive/15 text-destructive" },
+  indeterminado: { label: "Indeterminado", classe: "bg-muted-foreground/15 text-muted-foreground" },
+};
+const NIVEL_LABEL = { ok: "OK", atencao: "Atenção", risco: "Risco" } as const;
+const NIVEL_COR = {
+  ok: "text-emerald-700",
+  atencao: "text-amber-700",
+  risco: "text-destructive",
+} as const;
+
 
 export function BlocoChecklist({
   checklist,
@@ -52,12 +66,16 @@ export function BlocoFoto({
 }) {
   const [aComprimir, setAComprimir] = useState(false);
   const [aAvaliar, setAAvaliar] = useState(false);
+  const [detalhe, setDetalhe] = useState<AvaliacaoRgpd | null>(null);
+
 
   async function escolher(file: File) {
     try {
       setAComprimir(true);
       setFoto(await comprimirImagem(file));
       setAvaliacao(null);
+      setDetalhe(null);
+
       toast.success("Foto pronta");
     } catch (e) {
       toast.error((e as Error).message);
@@ -70,8 +88,15 @@ export function BlocoFoto({
     if (!foto) return;
     try {
       setAAvaliar(true);
-      const { texto } = await avaliarFoto({ data: { fotoDataUrl: foto } });
-      setAvaliacao(texto);
+      const r = await avaliarFoto({ data: { fotoDataUrl: foto } });
+      setDetalhe(r);
+      const linhas = [
+        `Veredicto RGPD: ${VEREDICTOS[r.veredicto].label}`,
+        r.resumo,
+        ...r.pontos.map((p) => `- [${NIVEL_LABEL[p.nivel]}] ${p.titulo}: ${p.nota}`),
+        ...(r.recomendacoes.length ? ["Recomendações:", ...r.recomendacoes.map((x) => `- ${x}`)] : []),
+      ].filter(Boolean);
+      setAvaliacao(linhas.join("\n"));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -104,7 +129,7 @@ export function BlocoFoto({
             />
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" disabled={aAvaliar} onClick={pedirAvaliacao}>
-                {aAvaliar ? "A avaliar…" : "Pedir avaliação à IA"}
+                {aAvaliar ? "A analisar…" : "Analisar conformidade RGPD"}
               </Button>
               <Button
                 variant="ghost"
@@ -112,13 +137,58 @@ export function BlocoFoto({
                 onClick={() => {
                   setFoto(null);
                   setAvaliacao(null);
+                  setDetalhe(null);
                 }}
               >
                 Remover foto
               </Button>
             </div>
-            {avaliacao && (
-              <p className="rounded-md border border-border bg-muted p-3 text-sm">{avaliacao}</p>
+            {detalhe ? (
+              <div className="space-y-3 rounded-md border border-border bg-muted p-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${VEREDICTOS[detalhe.veredicto].classe}`}
+                  >
+                    {VEREDICTOS[detalhe.veredicto].label}
+                  </span>
+                </div>
+                {detalhe.resumo && <p>{detalhe.resumo}</p>}
+                {detalhe.pontos.length > 0 && (
+                  <ul className="space-y-1">
+                    {detalhe.pontos.map((p, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className={`shrink-0 font-medium ${NIVEL_COR[p.nivel]}`}>
+                          {NIVEL_LABEL[p.nivel]}
+                        </span>
+                        <span>
+                          <strong>{p.titulo}</strong>
+                          {p.nota ? ` — ${p.nota}` : ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {detalhe.recomendacoes.length > 0 && (
+                  <div>
+                    <p className="font-medium">Recomendações</p>
+                    <ul className="list-disc pl-5">
+                      {detalhe.recomendacoes.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Apreciação automática de apoio, baseada apenas na imagem. Não substitui a avaliação
+                  do responsável pelo tratamento nem uma avaliação de impacto (AIPD).
+                </p>
+              </div>
+            ) : (
+              avaliacao && (
+                <p className="whitespace-pre-line rounded-md border border-border bg-muted p-3 text-sm">
+                  {avaliacao}
+                </p>
+              )
             )}
           </div>
         )}
@@ -126,6 +196,7 @@ export function BlocoFoto({
     </Card>
   );
 }
+
 
 export function BlocoCertificacoes({
   equipamentos,
