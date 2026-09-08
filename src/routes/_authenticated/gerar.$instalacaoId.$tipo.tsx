@@ -51,6 +51,7 @@ function Gerar() {
   const [assinatura, setAssinatura] = useState<string | null>(null);
   const [foto, setFoto] = useState<string | null>(null);
   const [avaliacaoFoto, setAvaliacaoFoto] = useState<string | null>(null);
+  const [avaliacaoRgpd, setAvaliacaoRgpd] = useState<AvaliacaoRgpdDoc | null>(null);
   const [certificacoes, setCertificacoes] = useState<Certificacao[]>([]);
   const [checklist, setChecklist] = useState(
     (tipo === "verificacao" ? CHECKLIST_VERIFICACAO : CHECKLIST_AUTO).map((label) => ({
@@ -152,6 +153,7 @@ function Gerar() {
         assinatura,
         foto,
         avaliacaoFoto,
+        avaliacaoRgpd,
         certificacoes,
         pendencias,
         logoAutoridade,
@@ -168,6 +170,7 @@ function Gerar() {
       assinatura,
       foto,
       avaliacaoFoto,
+      avaliacaoRgpd,
       certificacoes,
       pendencias,
       logoAutoridade,
@@ -190,6 +193,7 @@ function Gerar() {
         assinatura,
         foto,
         avaliacaoFoto,
+        avaliacaoRgpd,
         certificacoes,
         pendencias,
         logoAutoridade,
@@ -273,6 +277,7 @@ function Gerar() {
                 setFoto={setFoto}
                 avaliacao={avaliacaoFoto}
                 setAvaliacao={setAvaliacaoFoto}
+                setDetalheRgpd={setAvaliacaoRgpd}
               />
               {(equipamentos.data?.length ?? 0) > 0 && (
                 <BlocoCertificacoes
