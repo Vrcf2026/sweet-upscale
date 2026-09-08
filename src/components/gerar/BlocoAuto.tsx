@@ -58,11 +58,13 @@ export function BlocoFoto({
   setFoto,
   avaliacao,
   setAvaliacao,
+  setDetalheRgpd,
 }: {
   foto: string | null;
   setFoto: (v: string | null) => void;
   avaliacao: string | null;
   setAvaliacao: (v: string | null) => void;
+  setDetalheRgpd?: (v: AvaliacaoRgpd | null) => void;
 }) {
   const [aComprimir, setAComprimir] = useState(false);
   const [aAvaliar, setAAvaliar] = useState(false);
@@ -75,6 +77,7 @@ export function BlocoFoto({
       setFoto(await comprimirImagem(file));
       setAvaliacao(null);
       setDetalhe(null);
+      setDetalheRgpd?.(null);
 
       toast.success("Foto pronta");
     } catch (e) {
@@ -90,6 +93,7 @@ export function BlocoFoto({
       setAAvaliar(true);
       const r = await avaliarFoto({ data: { fotoDataUrl: foto } });
       setDetalhe(r);
+      setDetalheRgpd?.(r);
       const linhas = [
         `Veredicto RGPD: ${VEREDICTOS[r.veredicto].label}`,
         r.resumo,

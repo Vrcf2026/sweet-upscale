@@ -29,10 +29,29 @@ export type DocContext = {
   assinatura?: string | null;
   foto?: string | null;
   avaliacaoFoto?: string | null;
+  avaliacaoRgpd?: AvaliacaoRgpdDoc | null;
   certificacoes?: { equip: string; situacao: string; nota: string }[];
   pendencias?: string[];
   logoAutoridade?: string | null;
 };
+
+export type AvaliacaoRgpdDoc = {
+  veredicto: "conforme" | "atencao" | "risco" | "indeterminado";
+  resumo: string;
+  pontos: { titulo: string; nivel: "ok" | "atencao" | "risco"; nota: string }[];
+  recomendacoes: string[];
+};
+
+export const CRITERIOS_RGPD = [
+  "Captação de via pública, passeios ou estradas",
+  "Captação de propriedade de terceiros (janelas, varandas, logradouros)",
+  "Captação de zonas comuns de condomínio ou acessos partilhados",
+  "Zonas de privacidade reforçada (sanitários, vestiários, zonas de descanso)",
+  "Controlo do desempenho dos trabalhadores",
+  "Sinalética de videovigilância visível e legível",
+  "Princípio da minimização — captação limitada ao necessário",
+];
+
 
 const CSS = `
   .doc { font-family: "IBM Plex Sans", Arial, sans-serif; color:#111; background:#fff; width:190mm; padding:10mm; font-size:11px; line-height:1.45; }
@@ -420,8 +439,102 @@ export function buildDocumentHtml(ctx: DocContext): string {
       </div>`;
   }
 
-  return `<style>${CSS}</style><div class="doc${extraClass}"${extraStyle}>${body}${rodape(ctx)}</div>`;
+  return `<style>${CSS}${CSS_ANEXO}</style><div class="doc${extraClass}"${extraStyle}>${body}${rodape(ctx)}</div>${anexoRgpd(ctx)}`;
 }
+
+const CSS_ANEXO = `
+  .anexo { font-family:"IBM Plex Sans", Arial, sans-serif; color:#111; background:#fff; width:190mm; padding:10mm; font-size:11px; line-height:1.45; page-break-before:always; break-before:page; }
+  .anexo h1 { font-size:14px; margin:0 0 1mm; text-transform:uppercase; letter-spacing:.5px; }
+  .anexo h2 { font-size:12px; margin:6mm 0 2mm; text-transform:uppercase; border-bottom:1px solid #999; padding-bottom:1mm; }
+  .anexo .top { border-bottom:2px solid #111; padding-bottom:3mm; display:flex; justify-content:space-between; align-items:flex-start; }
+  .anexo .vd { display:inline-block; padding:1mm 3mm; border-radius:2mm; font-weight:700; font-size:11px; border:1px solid; }
+  .anexo .vd.conforme { background:#e9f7ec; border-color:#2e7d32; color:#1b5e20; }
+  .anexo .vd.atencao { background:#fff6dd; border-color:#b58900; color:#7a5c00; }
+  .anexo .vd.risco { background:#fdeaea; border-color:#c62828; color:#8e1616; }
+  .anexo .vd.indeterminado { background:#eef1f5; border-color:#7a8698; color:#414b5a; }
+  .anexo table { width:100%; border-collapse:collapse; margin-top:2mm; }
+  .anexo th, .anexo td { border:1px solid #999; padding:1.5mm 2mm; font-size:10px; text-align:left; vertical-align:top; }
+  .anexo th { background:#f0f0f0; }
+  .anexo td.n { width:22mm; font-weight:700; text-align:center; }
+  .anexo td.n.ok { color:#1b5e20; }
+  .anexo td.n.atencao { color:#7a5c00; }
+  .anexo td.n.risco { color:#8e1616; }
+  .anexo ul { margin:2mm 0; padding-left:5mm; font-size:10px; }
+  .anexo img.foto { max-width:100%; max-height:70mm; border:1px solid #999; margin-top:2mm; }
+  .anexo .legal { margin-top:6mm; border-top:1px solid #999; padding-top:2mm; font-size:8.5px; color:#444; }
+`;
+
+const VD_LABEL: Record<AvaliacaoRgpdDoc["veredicto"], string> = {
+  conforme: "Conforme",
+  atencao: "Requer atenção",
+  risco: "Risco identificado",
+  indeterminado: "Indeterminado",
+};
+
+const NV_LABEL: Record<"ok" | "atencao" | "risco", string> = {
+  ok: "Conforme",
+  atencao: "Atenção",
+  risco: "Risco",
+};
+
+function anexoRgpd(ctx: DocContext): string {
+  const a = ctx.avaliacaoRgpd;
+  if (!a) return "";
+  const linhas = a.pontos
+    .map(
+      (p) =>
+        `<tr><td>${esc(p.titulo)}</td><td class="n ${p.nivel}">${NV_LABEL[p.nivel]}</td><td>${esc(p.nota)}</td></tr>`,
+    )
+    .join("");
+  return `<div class="anexo">
+    <div class="top">
+      <div>
+        <h1>Anexo — Relatório de Conformidade RGPD</h1>
+        <div style="font-size:10px;color:#555">Videovigilância · ${esc(ctx.empresa?.nome ?? "")}</div>
+      </div>
+      <div style="text-align:right;font-size:10px">
+        Documento n.º ${esc(ctx.numero)}<br/>Data: ${dataPT(ctx.form["data"] ?? new Date().toISOString())}
+      </div>
+    </div>
+
+    <h2>Identificação</h2>
+    <div style="font-size:10px;display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm">
+      <div><b>Cliente:</b> ${esc(ctx.cliente?.nome ?? "")}</div>
+      <div><b>Local:</b> ${esc(ctx.instalacao?.morada ?? ctx.cliente?.morada ?? "")}</div>
+      <div><b>Responsável pelo tratamento:</b> ${esc(ctx.cliente?.nome ?? "")}</div>
+      <div><b>Prazo de retenção:</b> ${esc(ctx.form["retencao"] || "30")} dias</div>
+    </div>
+
+    <h2>Resultado da avaliação</h2>
+    <div><span class="vd ${a.veredicto}">${VD_LABEL[a.veredicto]}</span></div>
+    ${a.resumo ? `<div style="margin-top:2mm">${esc(a.resumo)}</div>` : ""}
+
+    ${
+      linhas
+        ? `<h2>Pontos avaliados</h2><table><thead><tr><th>Critério</th><th>Nível</th><th>Observação</th></tr></thead><tbody>${linhas}</tbody></table>`
+        : ""
+    }
+
+    ${
+      a.recomendacoes.length
+        ? `<h2>Recomendações</h2><ul>${a.recomendacoes.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`
+        : ""
+    }
+
+    <h2>Critérios utilizados</h2>
+    <ul>${CRITERIOS_RGPD.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
+
+    ${ctx.foto ? `<h2>Imagem analisada</h2><img class="foto" src="${ctx.foto}" alt="Imagem analisada na avaliação RGPD" />` : ""}
+
+    <div class="legal">
+      Avaliação de apoio efetuada com recurso a análise automatizada da imagem, com base no Regulamento (UE) 2016/679 (RGPD),
+      na Lei n.º 58/2019, de 8 de agosto, na Lei n.º 34/2013, de 16 de maio, e nas orientações da CNPD sobre videovigilância.
+      Não substitui a avaliação do responsável pelo tratamento nem, quando exigível, a avaliação de impacto sobre a proteção de dados.
+      As conclusões referem-se exclusivamente ao que é visível na imagem analisada, na data indicada.
+    </div>
+  </div>`;
+}
+
 
 export const CHECKLIST_AUTO = [
   "Códigos de acesso alterados",
