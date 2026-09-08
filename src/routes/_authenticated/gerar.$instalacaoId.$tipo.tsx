@@ -14,7 +14,7 @@ import {
   getUserId,
   proximoNumero,
 } from "@/lib/data";
-import { buildDocumentHtml, CHECKLIST_AUTO, CHECKLIST_VERIFICACAO } from "@/lib/docs";
+import { buildDocumentHtml, CHECKLIST_AUTO, CHECKLIST_VERIFICACAO, type AvaliacaoRgpdDoc } from "@/lib/docs";
 import { DOC_LABEL, type DocTipo } from "@/lib/model";
 import { CAMPOS_DOC } from "@/lib/campos";
 import { arquivarDocumento } from "@/lib/arquivo";
