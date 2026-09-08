@@ -1,0 +1,1 @@
+ALTER TABLE public.instalacoes ADD COLUMN IF NOT EXISTS lembrete_enviado_em timestamptz;
