@@ -498,7 +498,7 @@ function anexoRgpd(ctx: DocContext): string {
     </div>
 
     <h2>Identificação</h2>
-    <div class="grid" style="font-size:10px">
+    <div style="font-size:10px;display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm">
       <div><b>Cliente:</b> ${esc(ctx.cliente?.nome ?? "")}</div>
       <div><b>Local:</b> ${esc(ctx.instalacao?.morada ?? ctx.cliente?.morada ?? "")}</div>
       <div><b>Responsável pelo tratamento:</b> ${esc(ctx.cliente?.nome ?? "")}</div>
