@@ -29,10 +29,29 @@ export type DocContext = {
   assinatura?: string | null;
   foto?: string | null;
   avaliacaoFoto?: string | null;
+  avaliacaoRgpd?: AvaliacaoRgpdDoc | null;
   certificacoes?: { equip: string; situacao: string; nota: string }[];
   pendencias?: string[];
   logoAutoridade?: string | null;
 };
+
+export type AvaliacaoRgpdDoc = {
+  veredicto: "conforme" | "atencao" | "risco" | "indeterminado";
+  resumo: string;
+  pontos: { titulo: string; nivel: "ok" | "atencao" | "risco"; nota: string }[];
+  recomendacoes: string[];
+};
+
+export const CRITERIOS_RGPD = [
+  "Captação de via pública, passeios ou estradas",
+  "Captação de propriedade de terceiros (janelas, varandas, logradouros)",
+  "Captação de zonas comuns de condomínio ou acessos partilhados",
+  "Zonas de privacidade reforçada (sanitários, vestiários, zonas de descanso)",
+  "Controlo do desempenho dos trabalhadores",
+  "Sinalética de videovigilância visível e legível",
+  "Princípio da minimização — captação limitada ao necessário",
+];
+
 
 const CSS = `
   .doc { font-family: "IBM Plex Sans", Arial, sans-serif; color:#111; background:#fff; width:190mm; padding:10mm; font-size:11px; line-height:1.45; }
